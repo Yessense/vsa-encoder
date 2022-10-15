@@ -76,7 +76,7 @@ test_path = args.path_to_dataset / 'paired_test.npz'
 train_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=train_path)
 test_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=test_path)
 
-train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=10, drop_last=True)
+train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=10, drop_last=True, shuffle=True)
 test_loader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=10, drop_last=True)
 
 # ------------------------------------------------------------
