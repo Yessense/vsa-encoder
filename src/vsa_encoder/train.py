@@ -82,7 +82,9 @@ test_loader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=1
 # ------------------------------------------------------------
 # Model
 # ------------------------------------------------------------
+# model
 dict_args = vars(args)
+dict_args['steps_per_epoch'] = len(train_loader)
 autoencoder = VSAVAE(**dict_args)
 
 # ------------------------------------------------------------
