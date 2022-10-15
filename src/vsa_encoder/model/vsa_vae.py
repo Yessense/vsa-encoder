@@ -160,7 +160,7 @@ class VSAVAE(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        self._step(batch, batch_idx)
+        self._step(batch, batch_idx, mode='Validation')
 
     def loss_f(self, gt_images, reconstructions, mus, log_vars):
         image_loss = F.mse_loss(gt_images[0], reconstructions[0], reduction='sum')
