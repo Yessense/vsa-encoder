@@ -91,7 +91,7 @@ autoencoder = VSAVAE(**dict_args)
 # Callbacks
 # ------------------------------------------------------------
 
-monitor = 'Validation MSE'
+monitor = 'Validation/Total'
 
 # checkpoints
 save_top_k = 1
