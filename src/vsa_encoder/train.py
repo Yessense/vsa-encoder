@@ -1,3 +1,4 @@
+import os
 import random
 import sys
 from pathlib import Path
@@ -7,10 +8,12 @@ import pytorch_lightning as pl
 import numpy as np
 
 from argparse import ArgumentParser
+from torch.utils.data import DataLoader
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
 
 from model.vsa_vae import VSAVAE
+from dataset import PairedDspritesDataset
 
 # ------------------------------------------------------------
 # Parse args
@@ -63,7 +66,19 @@ wandb_logger = WandbLogger(project=args.mode + '_sa')
 # Dataset
 # ------------------------------------------------------------
 
+images_path = args.path_to_dataset / 'dsprite_train.npz'
+train_path = args.path_to_dataset / 'paired_train.npz'
+test_path = args.path_to_dataset / 'paired_test.npz'
+
+train_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=train_path)
+test_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=test_path)
+
+train_loader = DataLoader(train_dataset, batch_size=args.batch_size, num_workers=10, drop_last=True)
+test_loader = DataLoader(test_dataset, batch_size=args.batch_size, num_workers=10, drop_last=True)
+
+# ------------------------------------------------------------
 # Model
+# ------------------------------------------------------------
 dict_args = vars(args)
 autoencoder = VSAVAE(**dict_args)
 
@@ -107,13 +122,12 @@ trainer = pl.Trainer(accelerator='gpu',
 if 'ckpt_path' not in dict_args:
     dict_args['ckpt_path'] = None
 
-
 # ------------------------------------------------------------
 # Run
 # ------------------------------------------------------------
 
-if args.test:
-    trainer.test(autoencoder.load_from_checkpoint(checkpoint_path=dict_args['ckpt_path']))
-else:
-    trainer.fit(autoencoder, train_dataloaders=train_loader, val_dataloaders=val_loader, ckpt_path=dict_args['ckpt_path'])
-
+# if args.test:
+#     trainer.test(autoencoder.load_from_checkpoint(checkpoint_path=dict_args['ckpt_path']))
+# else:
+trainer.fit(autoencoder, train_dataloaders=train_loader, val_dataloaders=test_loader,
+            ckpt_path=dict_args['ckpt_path'])

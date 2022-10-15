@@ -166,9 +166,7 @@ class Dsprites(Dataset):
 class PairedDspritesDataset(Dataset):
     def __init__(self,
                  dsprites_path='data/dsprite_train.npz',
-                 paired_dsprites_path='data/paired_train.npz',
-                 max_exchanges: int = 1):
-        self.max_exchanges = max_exchanges
+                 paired_dsprites_path='data/paired_train.npz'):
 
         # Load npz numpy archive
         dsprites = np.load(dsprites_path, allow_pickle=True)
