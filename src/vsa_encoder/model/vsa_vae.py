@@ -3,6 +3,7 @@ from argparse import ArgumentParser
 from typing import Tuple
 
 import pytorch_lightning as pl
+import wandb
 from torch.optim import lr_scheduler
 
 from .decoder import Decoder
