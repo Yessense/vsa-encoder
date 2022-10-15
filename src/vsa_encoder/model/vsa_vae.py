@@ -3,8 +3,8 @@ from argparse import ArgumentParser
 from typing import Tuple
 
 import pytorch_lightning as pl
-from decoder import Decoder
-from encoder import Encoder
+from .decoder import Decoder
+from .encoder import Encoder
 import torch
 from torch import nn
 from ..utils import iou_pytorch
