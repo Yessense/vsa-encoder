@@ -122,7 +122,7 @@ trainer = pl.Trainer(accelerator='gpu',
                      profiler=profiler,
                      callbacks=callbacks,
                      logger=wandb_logger,
-                     check_val_every_n_epoch=5)
+                     )
 
 if 'ckpt_path' not in dict_args:
     dict_args['ckpt_path'] = None
