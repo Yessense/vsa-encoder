@@ -38,6 +38,7 @@ program_parser.add_argument("--path_to_dataset", type=Path, default=Path(__file_
 # Experiment parameters
 program_parser.add_argument("--batch_size", type=int, default=4)
 program_parser.add_argument("--test", type=bool, default=False)
+program_parser.add_argument("--seed", type=int, default=42)
 
 # Add model specific args
 parser = VSAVAE.add_model_specific_args(parent_parser=parser)
