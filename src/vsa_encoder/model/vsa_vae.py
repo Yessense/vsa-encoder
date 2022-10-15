@@ -3,6 +3,8 @@ from argparse import ArgumentParser
 from typing import Tuple
 
 import pytorch_lightning as pl
+from torch.optim import lr_scheduler
+
 from .decoder import Decoder
 from .encoder import Encoder
 import torch
@@ -152,6 +154,13 @@ class VSAVAE(pl.LightningModule):
 
         return total_loss
 
+    def training_step(self, batch, batch_idx):
+        loss = self._step(batch, batch_idx, mode='Train')
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        self._step(batch, batch_idx)
+
     def loss_f(self, gt_images, reconstructions, mus, log_vars):
         image_loss = F.mse_loss(gt_images[0], reconstructions[0], reduction='sum')
         donor_loss = F.mse_loss(gt_images[1], reconstructions[1], reduction='sum')
@@ -162,6 +171,19 @@ class VSAVAE(pl.LightningModule):
                 image_loss,
                 donor_loss,
                 self.kld_coef * kld_loss)
+
+
+    def configure_optimizers(self):
+        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
+        scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=self.lr,
+                                            epochs=self.hparams['max_epochs'],
+                                            steps_per_epoch=self.hparams['steps_per_epoch'],
+                                            pct_start=0.2)
+        return {"optimizer": optimizer,
+                "lr_scheduler": {'scheduler': scheduler,
+                                 'interval': 'step',
+                                 'frequency': 1}, }
+
 
 if __name__ == '__main__':
     vsavae = VSAVAE()
