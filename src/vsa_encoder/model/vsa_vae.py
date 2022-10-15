@@ -162,3 +162,6 @@ class VSAVAE(pl.LightningModule):
                 image_loss,
                 donor_loss,
                 self.kld_coef * kld_loss)
+
+if __name__ == '__main__':
+    vsavae = VSAVAE()
