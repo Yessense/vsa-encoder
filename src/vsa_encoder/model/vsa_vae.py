@@ -172,7 +172,6 @@ class VSAVAE(pl.LightningModule):
                 donor_loss,
                 self.kld_coef * kld_loss)
 
-
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)
         scheduler = lr_scheduler.OneCycleLR(optimizer, max_lr=self.lr,
@@ -187,3 +186,7 @@ class VSAVAE(pl.LightningModule):
 
 if __name__ == '__main__':
     vsavae = VSAVAE()
+    x = torch.randn(10, 1, 64, 64)
+    exchanges = torch.randint(0, 2, (10, 5), dtype=bool)
+
+    out = vsavae.forward(x, x, exchanges)

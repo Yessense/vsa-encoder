@@ -190,12 +190,12 @@ class PairedDspritesDataset(Dataset):
 
     def __getitem__(self, idx):
         img = self.imgs[self.data[idx][0]]
-        img = torch.from_numpy(img).unsqueeze(0)
+        img = torch.from_numpy(img).unsqueeze(0).float()
 
         pair_img = self.imgs[self.data[idx][1]]
-        pair_img = torch.from_numpy(pair_img).unsqueeze(0)
+        pair_img = torch.from_numpy(pair_img).unsqueeze(0).float()
 
-        exchange = torch.from_numpy(self.exchanges[idx]).bool()
+        exchange = torch.from_numpy(self.exchanges[idx]).bool().unsqueeze(-1)
         return img, pair_img, exchange
 
 
@@ -204,8 +204,8 @@ if __name__ == '__main__':
     # pairs = md.make_indices(100000, 30000)
     # np.savez_compressed('data/paired_train.npz', data=pairs[0], exchanges=pairs[1])
     # np.savez_compressed('data/paired_test.npz', data=pairs[2], exchanges=pairs[3])
-    pd = PairedDspritesDataset(dsprites_path='data/dsprite_train.npz',
-                               paired_dsprites_path='data/paired_train.npz')
+    pd = PairedDspritesDataset(dsprites_path='/home/yessense/PycharmProjects/vsa-encoder/data/dsprite_train.npz',
+                               paired_dsprites_path='/home/yessense/PycharmProjects/vsa-encoder/data/paired_train.npz')
 
     print('done')
     # md = Dsprites(max_exchanges=1, block_orientation=True)
