@@ -85,7 +85,7 @@ class VSAVAE(pl.LightningModule):
         donor_features_exept_one = torch.sum(donor_features_exept_one, dim=1)
 
         # Donor image
-        image_features_exept_one = torch.where(exchange_labels, image_features, donor_features)
+        image_features_exept_one = torch.where(exchange_labels, donor_features, image_features)
         image_features_exept_one = torch.sum(image_features_exept_one, dim=1)
 
         return donor_features_exept_one, image_features_exept_one
