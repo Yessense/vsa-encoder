@@ -61,3 +61,5 @@ RUN conda env create -f environment.yaml &&\
 RUN echo "source activate ml_env" > ~/.bashrc
 
 ADD src/* ${PROJECT_NAME}/
+
+#ENTRYPOINT []
