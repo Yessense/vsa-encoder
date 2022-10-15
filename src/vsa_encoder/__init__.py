@@ -1,2 +1,2 @@
-from utils import iou_pytorch
+from .utils import iou_pytorch
 
