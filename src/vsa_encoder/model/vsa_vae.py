@@ -7,7 +7,7 @@ from .decoder import Decoder
 from .encoder import Encoder
 import torch
 from torch import nn
-from ..utils import iou_pytorch
+from .. import iou_pytorch
 import torch.nn.functional as F
 
 
