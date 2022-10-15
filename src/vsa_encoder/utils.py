@@ -1,4 +1,6 @@
 import torch
+from functools import reduce
+import operator
 
 def iou_pytorch(outputs: torch.Tensor, labels: torch.Tensor):
     # You can comment out this line if you are passing tensors of equal shape
@@ -16,3 +18,10 @@ def iou_pytorch(outputs: torch.Tensor, labels: torch.Tensor):
     thresholded = torch.clamp(20 * (iou - 0.5), 0, 10).ceil() / 10  # This is equal to comparing with thresolds
 
     return thresholded.mean()
+
+def product(arr):
+    return reduce(operator.mul, arr)
+
+
+if __name__ == '__main__':
+    print(product([3,4,5]))

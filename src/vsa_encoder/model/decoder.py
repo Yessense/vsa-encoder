@@ -1,8 +1,8 @@
 from typing import Tuple
 
-import math
 import torch
 from torch import nn
+from ..utils import product
 
 
 class Decoder(nn.Module):
@@ -25,7 +25,7 @@ class Decoder(nn.Module):
         # Latent layers
         self.latent_layers = nn.Sequential(
             nn.Linear(self.latent_dim, self.latent_dim), nn.GELU(),
-            nn.Linear(self.latent_dim, math.prod(self.reshape)), nn.GELU()
+            nn.Linear(self.latent_dim, product(self.reshape)), nn.GELU()
         )
 
         if image_size == (3, 128, 128):
