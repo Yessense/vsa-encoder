@@ -1,1 +1,0 @@
-from .paired_dsprites import PairedDspritesDataset

@@ -1,0 +1,42 @@
+program: /home/yessense/PycharmProjects/vsa-encoder/src/vsa_encoder
+method: bayes
+metric:
+  name: "Validation/iou total"
+  goal: maximize
+parameters:
+  seed:
+    distribution: int_uniform
+    min: 0
+    max: 1000000
+  lr:
+    distribution: uniform
+    min: 0.000125
+    max: 0.0005
+  devices:
+    value: "0"
+  kld_coef:
+    distribution: uniform
+    min: 0.0005
+    max: 0.002
+  profiler:
+    value: "simple"
+  max_steps:
+    distribution: int_uniform
+    min: -2
+    max: 0
+  batch_size:
+    values: [ 32, 64, 128, 256, 512 ]
+  latent_dim:
+    distribution: int_uniform
+    min: 512
+    max: 2048
+  max_epochs:
+    value: 200
+  n_features:
+    value: 5
+  accelerator:
+    value: "gpu"
+  path_to_dataset:
+    value: ../data
+  check_val_every_n_epoch:
+    value: 5

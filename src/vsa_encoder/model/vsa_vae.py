@@ -6,11 +6,11 @@ import pytorch_lightning as pl
 import wandb
 from torch.optim import lr_scheduler
 
-from .decoder import Decoder
-from .encoder import Encoder
+from model.decoder import Decoder
+from model.encoder import Encoder
 import torch
 from torch import nn
-from .. import iou_pytorch
+from utils import iou_pytorch
 import torch.nn.functional as F
 
 
