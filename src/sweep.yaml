@@ -5,31 +5,27 @@ metric:
   goal: maximize
 parameters:
   seed:
-    distribution: int_uniform
-    min: 0
-    max: 1000000
+    value: 0
   lr:
     distribution: uniform
-    min: 0.000125
-    max: 0.0005
+    min: 0.00005
+    max: 0.0003
   devices:
     value: "0"
   kld_coef:
-    distribution: uniform
-    min: 0.0005
-    max: 0.002
+    distribution: log_uniform
+    min: -7.6
+    max: -0
   profiler:
     value: "simple"
   max_steps:
-    distribution: int_uniform
-    min: -2
-    max: 0
+    value: 10000
   batch_size:
     values: [ 32, 64, 128, 256, 512 ]
   latent_dim:
     distribution: int_uniform
-    min: 512
-    max: 2048
+    min: 32
+    max: 1024
   max_epochs:
     value: 200
   n_features:

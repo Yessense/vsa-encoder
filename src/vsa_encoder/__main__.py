@@ -84,6 +84,7 @@ def train(config) -> None:
     trainer = pl.Trainer(accelerator='gpu',
                          devices=devices,
                          max_epochs=config.max_epochs,
+                         max_steps=config.max_steps,
                          profiler=profiler,
                          callbacks=callbacks,
                          logger=wandb_logger,
