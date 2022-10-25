@@ -1,1 +1,1 @@
-wandb agent yessense/vsa_sweep/8k4gwfwk --count 20
+wandb agent yessense/vsa_sweep/8modraqv --count 20
