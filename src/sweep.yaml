@@ -1,4 +1,4 @@
-program: /home/yessense/PycharmProjects/vsa-encoder/src/vsa_encoder
+program: /home/akorchemnyi/vsa-encoder/src/vsa_encoder
 method: bayes
 metric:
   name: "Validation/iou total"
@@ -9,7 +9,7 @@ parameters:
   lr:
     distribution: uniform
     min: 0.00005
-    max: 0.0003
+    max: 0.0004
   devices:
     value: "0"
   kld_coef:
@@ -19,7 +19,7 @@ parameters:
   profiler:
     value: "simple"
   max_steps:
-    value: 10000
+    value: 80000
   batch_size:
     values: [ 32, 64, 128, 256, 512 ]
   latent_dim:
