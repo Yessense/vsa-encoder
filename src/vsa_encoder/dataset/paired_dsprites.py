@@ -167,7 +167,6 @@ class PairedDspritesDataset(Dataset):
     def __init__(self,
                  dsprites_path='data/dsprite_train.npz',
                  paired_dsprites_path='data/paired_train.npz'):
-
         # Load npz numpy archive
         dsprites = np.load(dsprites_path, allow_pickle=True)
         paired_dsprites = np.load(paired_dsprites_path, allow_pickle=True)
@@ -200,12 +199,14 @@ class PairedDspritesDataset(Dataset):
 
 
 if __name__ == '__main__':
-    # md = Dsprites(max_exchanges=4)
-    # pairs = md.make_indices(100000, 30000)
-    # np.savez_compressed('data/paired_train.npz', data=pairs[0], exchanges=pairs[1])
-    # np.savez_compressed('data/paired_test.npz', data=pairs[2], exchanges=pairs[3])
+    md = Dsprites(max_exchanges=1, path="/home/yessense/PycharmProjects/vsa-encoder/one_exchange/dsprite_train.npz")
+    pairs = md.make_indices(100000, 30000)
+    np.savez_compressed('/home/yessense/PycharmProjects/vsa-encoder/one_exchange/paired_train.npz', data=pairs[0],
+                        exchanges=pairs[1])
+    np.savez_compressed('/home/yessense/PycharmProjects/vsa-encoder/one_exchange/paired_test.npz', data=pairs[2],
+                        exchanges=pairs[3])
     pd = PairedDspritesDataset(dsprites_path='/home/yessense/PycharmProjects/vsa-encoder/data/dsprite_train.npz',
-                               paired_dsprites_path='/home/yessense/PycharmProjects/vsa-encoder/data/paired_train.npz')
+                               paired_dsprites_path='/home/yessense/PycharmProjects/vsa-encoder/one_exchange/paired_train.npz')
 
     print('done')
     # md = Dsprites(max_exchanges=1, block_orientation=True)
