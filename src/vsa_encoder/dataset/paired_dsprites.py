@@ -50,6 +50,9 @@ class Dsprites(Dataset):
 
         self.n_features = 5
 
+    def __getitem__(self, idx):
+        return self.imgs[idx], self.labels[idx]
+
     def get_pair(self, img_labels):
         pair_img_labels = np.copy(img_labels)
 
