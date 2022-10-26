@@ -1,6 +1,9 @@
 import os
 import random
 import sys
+
+import wandb
+
 sys.path.append("..")
 # SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # sys.path.append(os.path.dirname(SCRIPT_DIR))
@@ -62,9 +65,9 @@ np.random.seed(args.seed)
 # ------------------------------------------------------------
 # Logger
 # ------------------------------------------------------------
-
 # Logger
-wandb_logger = WandbLogger(project=args.mode + '_vsa', name=f'{args.mode} s{args.seed}')
+wandb.init(project=args.mode + '_vsa')
+wandb_logger = WandbLogger(project=args.mode + '_vsa', name=f'{args.mode} s{args.seed}', save_dir=)
 
 # ------------------------------------------------------------
 # Dataset
