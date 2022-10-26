@@ -16,7 +16,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
 
 from model.vsa_vae import VSAVAE
-from dataset import PairedDspritesDataset
+from dataset.paired_dsprites import PairedDspritesDataset
 
 # ------------------------------------------------------------
 # Parse args
