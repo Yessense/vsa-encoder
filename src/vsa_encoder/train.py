@@ -66,8 +66,7 @@ np.random.seed(args.seed)
 # Logger
 # ------------------------------------------------------------
 # Logger
-wandb.init(project=args.mode + '_vsa')
-wandb_logger = WandbLogger(project=args.mode + '_vsa', name=f'{args.mode} s{args.seed}')
+wandb_logger = WandbLogger(project=args.mode + '_vsa', name=f'{args.mode} s{args.seed}', log_model=True, save_dir='./')
 
 # ------------------------------------------------------------
 # Dataset
