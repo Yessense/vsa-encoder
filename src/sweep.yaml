@@ -1,0 +1,38 @@
+program: /home/akorchemnyi/vsa-encoder/src/vsa_encoder
+method: bayes
+metric:
+  name: "Validation/iou total"
+  goal: maximize
+parameters:
+  seed:
+    value: 0
+  lr:
+    distribution: uniform
+    min: 0.00005
+    max: 0.0004
+  devices:
+    value: "0"
+  kld_coef:
+    distribution: log_uniform
+    min: -7.6
+    max: -0
+  profiler:
+    value: "simple"
+  max_steps:
+    value: 80000
+  batch_size:
+    values: [ 32, 64, 128, 256, 512 ]
+  latent_dim:
+    distribution: int_uniform
+    min: 32
+    max: 1024
+  max_epochs:
+    value: 200
+  n_features:
+    value: 5
+  accelerator:
+    value: "gpu"
+  path_to_dataset:
+    value: ../data
+  check_val_every_n_epoch:
+    value: 5

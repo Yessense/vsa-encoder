@@ -1,8 +1,8 @@
 from typing import Tuple
 
 import torch
-import math
 from torch import nn
+from utils import product
 
 
 class Encoder(nn.Module):
@@ -52,7 +52,7 @@ class Encoder(nn.Module):
             self.reshape = (self.hidden_channels, 4, 4)
 
         self.final_layers = nn.Sequential(
-            nn.Linear(math.prod(self.reshape), self.out_channels), nn.ReLU(),
+            nn.Linear(product(self.reshape), self.out_channels), nn.ReLU(),
             nn.Linear(self.out_channels, self.out_channels),
         )
 
