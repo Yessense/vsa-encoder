@@ -14,7 +14,7 @@ import pytorch_lightning as pl
 from pytorch_lightning import seed_everything
 import numpy as np
 
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from torch.utils.data import DataLoader
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 from pytorch_lightning.loggers import WandbLogger
@@ -54,7 +54,11 @@ def train(config):
     # Model
     # ------------------------------------------------------------
 
-    dict_args = dict(config)
+    if isinstance(config, Namespace):
+        dict_args = vars(config)
+    else:
+        dict_args = dict(config)
+
     dict_args['steps_per_epoch'] = len(train_loader)
     autoencoder = VSAVAE(**dict_args)
 
