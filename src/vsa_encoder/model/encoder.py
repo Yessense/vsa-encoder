@@ -28,13 +28,9 @@ class Encoder(nn.Module):
             # Convolutional layers
             self.cnn_layers = nn.Sequential(
                 nn.Conv2d(self.in_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.BatchNorm2d(self.hidden_channels),
                 nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.BatchNorm2d(self.hidden_channels),
                 nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.BatchNorm2d(self.hidden_channels),
                 nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.BatchNorm2d(self.hidden_channels),
                 nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
             )
             self.reshape = (self.hidden_channels, 4, 4)
@@ -42,11 +38,8 @@ class Encoder(nn.Module):
             # Convolutional layers
             self.cnn_layers = nn.Sequential(
                 nn.Conv2d(self.in_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.BatchNorm2d(self.hidden_channels),
                 nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.BatchNorm2d(self.hidden_channels),
                 nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.BatchNorm2d(self.hidden_channels),
                 nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
             )
             self.reshape = (self.hidden_channels, 4, 4)
