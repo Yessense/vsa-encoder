@@ -165,10 +165,15 @@ class VSAVAE(pl.LightningModule):
         self._step(batch, batch_idx, mode='Validation')
 
     def loss_f(self, gt_images, reconstructions, mus, log_vars):
-        image_loss = F.mse_loss(gt_images[0], reconstructions[0], reduction='sum')
-        donor_loss = F.mse_loss(gt_images[1], reconstructions[1], reduction='sum')
+        reduction = 'mean'
+        image_loss = F.mse_loss(gt_images[0], reconstructions[0], reduction=reduction)
+        donor_loss = F.mse_loss(gt_images[1], reconstructions[1], reduction=reduction)
 
         kld_loss = -0.5 * torch.sum(1 + log_vars - mus.pow(2) - log_vars.exp())
+
+        if reduction == 'mean':
+            batch_size = mus.shape[0]
+            kld_loss = kld_loss / batch_size
 
         return image_loss, donor_loss, kld_loss
 
