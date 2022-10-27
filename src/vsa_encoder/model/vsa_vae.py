@@ -125,7 +125,9 @@ class VSAVAE(pl.LightningModule):
         mus = sum(mus) * 2 ** -0.5
         log_vars = sum(mus) * 2 ** -0.5
 
-        total_loss, image_loss, donor_loss, kld_loss = self.loss_f((image, donor), reconstructions, mus, log_vars)
+        image_loss, donor_loss, kld_loss = self.loss_f((image, donor), reconstructions, mus, log_vars)
+
+        total_loss = (image_loss + donor_loss) * 0.5 + self.kld_coef * kld_loss
 
         iou_image = iou_pytorch(reconstructions[0], image)
         iou_donor = iou_pytorch(reconstructions[1], donor)
@@ -139,7 +141,7 @@ class VSAVAE(pl.LightningModule):
         self.log(f"{mode}/Reconstruct Image", image_loss)
         self.log(f"{mode}/Reconstruct Donor", donor_loss)
         self.log(f"{mode}/Mean Reconstruction", (image_loss + donor_loss) / 2)
-        self.log(f"{mode}/KLD", kld_loss)
+        self.log(f"{mode}/KLD", kld_loss * self.kld_coef)
         self.log(f"{mode}/iou total", total_iou)
         self.log(f"{mode}/iou image", iou_image)
         self.log(f"{mode}/iou donor", iou_donor)
@@ -168,10 +170,7 @@ class VSAVAE(pl.LightningModule):
 
         kld_loss = -0.5 * torch.sum(1 + log_vars - mus.pow(2) - log_vars.exp())
 
-        return ((image_loss + donor_loss) * 0.5 + self.kld_coef * kld_loss,
-                image_loss,
-                donor_loss,
-                self.kld_coef * kld_loss)
+        return image_loss, donor_loss, kld_loss
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr)

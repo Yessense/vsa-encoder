@@ -56,10 +56,10 @@ def train(config):
     test_loader = DataLoader(test_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True)
 
     dict_args['steps_per_epoch'] = len(train_loader)
+
     # ------------------------------------------------------------
     # Model
     # ------------------------------------------------------------
-
 
     autoencoder = VSAVAE(**dict_args)
 
