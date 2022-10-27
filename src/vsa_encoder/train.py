@@ -26,6 +26,11 @@ from dataset.paired_dsprites import PairedDspritesDataset
 # from dataset import
 
 def train(config):
+    if isinstance(config, Namespace):
+        dict_args = vars(config)
+    else:
+        dict_args = dict(config)
+
     # ------------------------------------------------------------
     # Random
     # ------------------------------------------------------------
@@ -50,16 +55,12 @@ def train(config):
     train_loader = DataLoader(train_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True)
 
+    dict_args['steps_per_epoch'] = len(train_loader)
     # ------------------------------------------------------------
     # Model
     # ------------------------------------------------------------
 
-    if isinstance(config, Namespace):
-        dict_args = vars(config)
-    else:
-        dict_args = dict(config)
 
-    dict_args['steps_per_epoch'] = len(train_loader)
     autoencoder = VSAVAE(**dict_args)
 
     # ------------------------------------------------------------
