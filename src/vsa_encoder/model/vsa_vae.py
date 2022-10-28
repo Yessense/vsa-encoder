@@ -165,7 +165,7 @@ class VSAVAE(pl.LightningModule):
         self._step(batch, batch_idx, mode='Validation')
 
     def loss_f(self, gt_images, reconstructions, mus, log_vars):
-        reduction = 'mean'
+        reduction = 'sum'
         image_loss = F.mse_loss(gt_images[0], reconstructions[0], reduction=reduction)
         donor_loss = F.mse_loss(gt_images[1], reconstructions[1], reduction=reduction)
 
