@@ -1,1 +1,1 @@
-wandb agent yessense/vsa_sweep/8modraqv --count 20
+wandb agent yessense/latent_dim/8modraqv

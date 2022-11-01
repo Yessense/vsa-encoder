@@ -1,2 +1,2 @@
-wandb sweep --project vsa_sweep sweep.yaml 
+wandb sweep --project latent_dim latent_dim_sweep.yaml
 
