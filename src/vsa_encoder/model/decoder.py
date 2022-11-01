@@ -43,16 +43,16 @@ class Decoder(nn.Module):
         elif image_size == (1, 64, 64):
             self.cnn_layers = nn.Sequential(
                 nn.ConvTranspose2d(self.in_channels, self.hidden_channels, **cnn_kwargs),
-                nn.BatchNorm2d(self.hidden_channels),
                 nn.GELU(),
+                nn.BatchNorm2d(self.hidden_channels),
 
                 nn.ConvTranspose2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs),
-                nn.BatchNorm2d(self.hidden_channels),
                 nn.GELU(),
+                nn.BatchNorm2d(self.hidden_channels),
 
                 nn.ConvTranspose2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs),
-                nn.BatchNorm2d(self.hidden_channels),
                 nn.GELU(),
+                nn.BatchNorm2d(self.hidden_channels),
 
                 nn.ConvTranspose2d(self.hidden_channels, self.out_channels, **cnn_kwargs)
             )
