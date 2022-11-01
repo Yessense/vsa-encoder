@@ -1,5 +1,5 @@
 program: /home/akorchemnyi/vsa-encoder/src/vsa_encoder
-method: bayiws
+method: grid
 metric:
   name: "Validation/iou total"
   goal: maximize
@@ -7,31 +7,24 @@ parameters:
   seed:
     value: 0
   lr:
-    distribution: uniform
-    max: 0.0004
+    value: 0.00025
   devices:
     value: "0"
   kld_coef:
-    distribution: log_uniform
-    min: -7.6
-    max: -0
+    value: 0.001
   profiler:
     value: "simple"
-  max_steps:
-    value: 80000
-  batch_size:
-    values: [ 32, 64, 128, 256, 512 ]
-  latent_dim:
-    distribution: int_uniform
-    min: 32
-    max: 1024
   max_epochs:
-    value: 200
+    value: 400
+  batch_size:
+    value: 512
+  latent_dim:
+    values: [16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
   n_features:
     value: 5
   accelerator:
     value: "gpu"
   path_to_dataset:
-    value: ../data
+    value: ../one_exchange
   check_val_every_n_epoch:
     value: 5

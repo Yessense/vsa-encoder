@@ -1,5 +1,5 @@
 program: /home/akorchemnyi/vsa-encoder/src/vsa_encoder
-method: bayiws
+method: bayes
 metric:
   name: "Validation/iou total"
   goal: maximize
@@ -8,6 +8,7 @@ parameters:
     value: 0
   lr:
     distribution: uniform
+    min: 0.00005
     max: 0.0004
   devices:
     value: "0"
