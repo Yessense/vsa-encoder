@@ -67,6 +67,11 @@ class VSAVAE(pl.LightningModule):
             return mu
 
     def encode(self, x):
+        """ Get features multiplied by placeholders
+
+        x -> [batch_size, n_channels, height, width]
+        out -> [batch_size, n_features, latent_dim]
+        """
         mu, log_var = self.encoder(x)
 
         z = self.reparametrize(mu, log_var)
