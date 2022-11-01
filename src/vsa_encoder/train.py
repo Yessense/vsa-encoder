@@ -39,7 +39,7 @@ def train(config):
     # ------------------------------------------------------------
     # Logger
     # ------------------------------------------------------------
-    wandb_logger = WandbLogger(project=config.mode + '_vsa', name=f'{config.mode} l{config.latent_dim} s{config.seed}', log_model=True)
+    wandb_logger = WandbLogger(project=config.mode + '_vsa', name=f'{config.mode} -l {config.latent_dim} -s {config.seed}', log_model=True)
 
     # ------------------------------------------------------------
     # Dataset
