@@ -9,6 +9,7 @@ from torch.optim import lr_scheduler
 from model.decoder import Decoder
 from model.encoder import Encoder
 import torch
+from vsa import bind
 from torch import nn
 from utils import iou_pytorch
 import torch.nn.functional as F
@@ -52,7 +53,12 @@ class VSAVAE(pl.LightningModule):
         self.decoder = Decoder(latent_dim=latent_dim, image_size=image_size)
 
         # hd placeholders
+
         hd_placeholders = torch.randn(1, self.n_features, self.latent_dim)
+        norm = torch.linalg.norm(hd_placeholders, dim=-1)
+        norm = norm.unsqueeze(-1).expand(hd_placeholders.size())
+        hd_placeholders = hd_placeholders / norm
+
         self.hd_placeholders = nn.Parameter(data=hd_placeholders)
 
         self.save_hyperparameters()
@@ -76,8 +82,9 @@ class VSAVAE(pl.LightningModule):
 
         z = self.reparametrize(mu, log_var)
         z = z.reshape(-1, self.n_features, self.latent_dim)
-        mask = self.hd_placeholders.data.expand(z.size())
-        z = z * mask
+        mask = self.hd_placeholders.data
+
+        z = bind(z, mask)
 
         return z, mu, log_var
 
