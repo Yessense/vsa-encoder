@@ -5,7 +5,6 @@ from typing import Tuple
 import pytorch_lightning as pl
 import wandb
 from torch.optim import lr_scheduler
-import vsa
 from model.decoder import Decoder
 from model.encoder import Encoder
 import torch
