@@ -112,6 +112,11 @@ def train(config):
     profiler = 'simple'  # 'simple'/'advanced'/None
     devices = [int(config.devices)]
 
+    if config.gradient_clip:
+        gradient_clip_val = 5.0
+    else:
+        gradient_clip_val = None
+
     # trainer
     trainer = pl.Trainer(accelerator='gpu',
                          devices=devices,
@@ -120,7 +125,7 @@ def train(config):
                          callbacks=callbacks,
                          logger=wandb_logger,
                          check_val_every_n_epoch=5,
-                         gradient_clip_val=5.0)
+                         gradient_clip_val=gradient_clip_val)
 
     if 'ckpt_path' not in dict_args:
         dict_args['ckpt_path'] = None
@@ -159,6 +164,7 @@ if __name__ == '__main__':
     program_parser.add_argument("--batch_size", type=int, default=4)
     program_parser.add_argument("--test", type=bool, default=False)
     program_parser.add_argument("--seed", type=int, default=42)
+    program_parser.add_argument("--gradient_clip", type=bool, default=True)
 
     # Add model specific args
     parser = VSAVAE.add_model_specific_args(parent_parser=parser)
