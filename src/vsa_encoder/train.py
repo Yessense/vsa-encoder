@@ -148,4 +148,6 @@ if __name__ == '__main__':
     # Parse input
     config = parser.parse_args()
 
+    print(f'Starting a run with {config}')
+
     train(config)

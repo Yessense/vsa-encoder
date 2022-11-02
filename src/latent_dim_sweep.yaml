@@ -1,4 +1,4 @@
-program: /home/akorchemnyi/vsa-encoder/src/vsa_encoder
+program: /home/akorchemnyi/vsa-encoder/src/vsa_encoder/train.py
 method: grid
 metric:
   name: "Validation/iou total"
@@ -28,3 +28,8 @@ parameters:
     value: ../one_exchange
   check_val_every_n_epoch:
     value: 5
+command:
+  - ${env}
+  - python3
+  - ${program}
+  - ${args}
