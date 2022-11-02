@@ -178,8 +178,9 @@ class VSAVAE(pl.LightningModule):
 
     def loss_f(self, gt_images, reconstructions, mus, log_vars):
         reduction = 'sum'
-        image_loss = F.binary_cross_entropy(gt_images[0], reconstructions[0], reduction=reduction)
-        donor_loss = F.binary_cross_entropy(gt_images[1], reconstructions[1], reduction=reduction)
+        loss = nn.BCELoss()
+        image_loss = loss(gt_images[0], reconstructions[0], reduction=reduction)
+        donor_loss = loss(gt_images[1], reconstructions[1], reduction=reduction)
 
         kld_loss = -0.5 * torch.sum(1 + log_vars - mus.pow(2) - log_vars.exp())
 
