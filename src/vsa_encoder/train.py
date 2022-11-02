@@ -21,6 +21,7 @@ from pytorch_lightning.loggers import WandbLogger
 
 from model.vsa_vae import VSAVAE
 from dataset.paired_dsprites import PairedDspritesDataset
+from dataset.clevr import PairedCogentClevr
 
 
 # from dataset import
@@ -41,8 +42,8 @@ def train(config):
     # ------------------------------------------------------------
     wandb_logger = WandbLogger(project=config.mode + '_vsa',
                                name=f'{config.mode} -l {config.latent_dim} '
-                                    f'-s {config.seed} -kl {config.kld_coef}'
-                                    f' -bs {config.batch_size}'
+                                    f'-s {config.seed} -kl {config.kld_coef} '
+                                    f'-bs {config.batch_size} '
                                     f'vsa',
                                log_model=True)
 
@@ -50,15 +51,30 @@ def train(config):
     # Dataset
     # ------------------------------------------------------------
 
-    images_path = config.path_to_dataset / 'dsprite_train.npz'
-    train_path = config.path_to_dataset / 'paired_train.npz'
-    test_path = config.path_to_dataset / 'paired_test.npz'
+    if config.mode == 'dsprites':
+        images_path = config.path_to_dataset / 'dsprite_train.npz'
+        train_path = config.path_to_dataset / 'paired_train.npz'
+        test_path = config.path_to_dataset / 'paired_test.npz'
 
-    train_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=train_path)
-    test_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=test_path)
+        train_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=train_path)
+        test_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=test_path)
 
-    train_loader = DataLoader(train_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True)
+        train_loader = DataLoader(train_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True,
+                                  shuffle=True)
+        test_loader = DataLoader(test_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True)
+    elif config.mode == 'clevr':
+        dict_args['image_size'] = (3, 128, 128)
+        train_path = config.path_to_dataset / 'train'
+        val_path = config.path_to_dataset / 'val'
+
+        train_dataset = PairedCogentClevr(dataset_path=train_path)
+        test_dataset = PairedCogentClevr(dataset_path=val_path)
+
+        train_loader = DataLoader(train_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True,
+                                  shuffle=True)
+        test_loader = DataLoader(test_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True)
+    else:
+        raise ValueError("Wrong mode")
 
     dict_args['steps_per_epoch'] = len(train_loader)
 

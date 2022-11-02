@@ -1,5 +1,6 @@
 import json
 import os
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -12,9 +13,11 @@ from torchvision.io import read_image
 
 
 class PairedCogentClevr(Dataset):
-    def __init__(self, scenes_dir, images_dir, img_shape=(3, 128, 128), max_objects=10, for_stats=False):
-        self.scenes_dir = scenes_dir
-        self.images_dir = images_dir
+    def __init__(self, dataset_path, img_shape=(3, 128, 128), max_objects=10, for_stats=False):
+
+        dataset_path = Path(dataset_path)
+        self.scenes_dir = dataset_path / 'scenes'
+        self.images_dir = dataset_path / 'scenes'
         self.img_shape = img_shape
         self.max_objects = max_objects
 
@@ -111,6 +114,7 @@ if __name__ == '__main__':
     dataset = PairedCogentClevr(scenes_dir='/home/yessense/projects/clevr_multi_cogent/test/scenes',
                                 images_dir='/home/yessense/projects/clevr_multi_cogent/test/images',
                                 img_shape=(3, 128, 128), for_stats=False)
+
 
     def plot_one_example(batch):
         exchange_labels, image, pair_image, img_scene, pair_scene, obj_images, obj_masks = batch
