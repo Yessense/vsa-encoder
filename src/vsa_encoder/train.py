@@ -40,7 +40,10 @@ def train(config):
     # Logger
     # ------------------------------------------------------------
     wandb_logger = WandbLogger(project=config.mode + '_vsa',
-                               name=f'{config.mode} -l {config.latent_dim} -s {config.seed} -kl {config.kld_coef}vsa',
+                               name=f'{config.mode} -l {config.latent_dim} '
+                                    f'-s {config.seed} -kl {config.kld_coef}'
+                                    f' -bs {config.batch_size}'
+                                    f'vsa',
                                log_model=True)
 
     # ------------------------------------------------------------
