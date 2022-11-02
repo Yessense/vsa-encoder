@@ -1,9 +1,10 @@
-program: /home/akorchemnyi/vsa-encoder/src/vsa_encoder/train.py
+program: /home/yessense/PycharmProjects/vsa-encoder/src/vsa_encoder/train.py
 method: grid
 metric:
   name: "Validation/iou total"
   goal: maximize
 parameters:
+
   seed:
     value: 0
   lr:

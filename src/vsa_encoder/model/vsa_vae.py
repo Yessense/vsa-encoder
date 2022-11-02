@@ -178,9 +178,9 @@ class VSAVAE(pl.LightningModule):
 
     def loss_f(self, gt_images, reconstructions, mus, log_vars):
         reduction = 'sum'
-        loss = nn.BCELoss()
-        image_loss = loss(gt_images[0], reconstructions[0], reduction=reduction)
-        donor_loss = loss(gt_images[1], reconstructions[1], reduction=reduction)
+        loss = nn.MSELoss(reduction=reduction)
+        image_loss = loss(reconstructions[0], gt_images[0])
+        donor_loss = loss(reconstructions[1], gt_images[1])
 
         kld_loss = -0.5 * torch.sum(1 + log_vars - mus.pow(2) - log_vars.exp())
 

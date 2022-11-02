@@ -39,7 +39,9 @@ def train(config):
     # ------------------------------------------------------------
     # Logger
     # ------------------------------------------------------------
-    wandb_logger = WandbLogger(project=config.mode + '_vsa', name=f'{config.mode} -l {config.latent_dim} -s {config.seed} vsa', log_model=True)
+    wandb_logger = WandbLogger(project=config.mode + '_vsa',
+                               name=f'{config.mode} -l {config.latent_dim} -s {config.seed} -kl {config.kld_coef}vsa',
+                               log_model=True)
 
     # ------------------------------------------------------------
     # Dataset
@@ -130,7 +132,7 @@ if __name__ == '__main__':
     program_parser.add_argument("--logger_dir", type=str, default=None)
 
     # dataset parameters
-    program_parser.add_argument("--mode", type=str, choices=['dsprites', 'clevr'])
+    program_parser.add_argument("--mode", type=str, choices=['dsprites', 'clevr'], default='dsprites')
     program_parser.add_argument("--path_to_dataset", type=Path, default=Path(__file__).absolute().parent / "data",
                                 help="Path to the dataset directory")
 
