@@ -151,13 +151,14 @@ if __name__ == '__main__':
     # add PROGRAM level args
     program_parser = parser.add_argument_group('program')
 
+
     # logger parameters
     program_parser.add_argument("--log_model", default=True)
     program_parser.add_argument("--logger_dir", type=str, default=None)
 
     # dataset parameters
     program_parser.add_argument("--mode", type=str, choices=['dsprites', 'clevr'], default='dsprites')
-    program_parser.add_argument("--path_to_dataset", type=Path, default=Path(__file__).absolute().parent / "data",
+    program_parser.add_argument("--path_to_dataset", type=Path, default=Path(__file__).absolute().parent.parent.parent / "data",
                                 help="Path to the dataset directory")
 
     # Experiment parameters

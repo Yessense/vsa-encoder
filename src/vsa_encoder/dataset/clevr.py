@@ -17,7 +17,7 @@ class PairedCogentClevr(Dataset):
 
         dataset_path = Path(dataset_path)
         self.scenes_dir = dataset_path / 'scenes'
-        self.images_dir = dataset_path / 'scenes'
+        self.images_dir = dataset_path / 'images'
         self.img_shape = img_shape
         self.max_objects = max_objects
 
