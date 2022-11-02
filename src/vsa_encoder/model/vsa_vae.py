@@ -8,6 +8,7 @@ from torch.optim import lr_scheduler
 from model.decoder import Decoder
 from model.encoder import Encoder
 import torch
+from vsa import bind
 from torch import nn
 from utils import iou_pytorch
 import torch.nn.functional as F
@@ -51,7 +52,12 @@ class VSAVAE(pl.LightningModule):
         self.decoder = Decoder(latent_dim=latent_dim, image_size=image_size)
 
         # hd placeholders
+
         hd_placeholders = torch.randn(1, self.n_features, self.latent_dim)
+        norm = torch.linalg.norm(hd_placeholders, dim=-1)
+        norm = norm.unsqueeze(-1).expand(hd_placeholders.size())
+        hd_placeholders = hd_placeholders / norm
+
         self.hd_placeholders = nn.Parameter(data=hd_placeholders)
 
         self.save_hyperparameters()
@@ -75,8 +81,9 @@ class VSAVAE(pl.LightningModule):
 
         z = self.reparametrize(mu, log_var)
         z = z.reshape(-1, self.n_features, self.latent_dim)
-        mask = self.hd_placeholders.data.expand(z.size())
-        z = z * mask
+        mask = self.hd_placeholders.data
+
+        z = bind(z, mask)
 
         return z, mu, log_var
 
@@ -170,8 +177,9 @@ class VSAVAE(pl.LightningModule):
 
     def loss_f(self, gt_images, reconstructions, mus, log_vars):
         reduction = 'sum'
-        image_loss = F.mse_loss(gt_images[0], reconstructions[0], reduction=reduction)
-        donor_loss = F.mse_loss(gt_images[1], reconstructions[1], reduction=reduction)
+        loss = nn.MSELoss(reduction=reduction)
+        image_loss = loss(reconstructions[0], gt_images[0])
+        donor_loss = loss(reconstructions[1], gt_images[1])
 
         kld_loss = -0.5 * torch.sum(1 + log_vars - mus.pow(2) - log_vars.exp())
 

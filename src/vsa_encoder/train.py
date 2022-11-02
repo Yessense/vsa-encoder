@@ -39,7 +39,12 @@ def train(config):
     # ------------------------------------------------------------
     # Logger
     # ------------------------------------------------------------
-    wandb_logger = WandbLogger(project=config.mode + '_vsa', name=f'{config.mode} -l {config.latent_dim} -s {config.seed}', log_model=True)
+    wandb_logger = WandbLogger(project=config.mode + '_vsa',
+                               name=f'{config.mode} -l {config.latent_dim} '
+                                    f'-s {config.seed} -kl {config.kld_coef}'
+                                    f' -bs {config.batch_size}'
+                                    f'vsa',
+                               log_model=True)
 
     # ------------------------------------------------------------
     # Dataset
@@ -98,7 +103,8 @@ def train(config):
                          profiler=profiler,
                          callbacks=callbacks,
                          logger=wandb_logger,
-                         check_val_every_n_epoch=5)
+                         check_val_every_n_epoch=5,
+                         gradient_clip_val=5.0)
 
     if 'ckpt_path' not in dict_args:
         dict_args['ckpt_path'] = None
@@ -129,7 +135,7 @@ if __name__ == '__main__':
     program_parser.add_argument("--logger_dir", type=str, default=None)
 
     # dataset parameters
-    program_parser.add_argument("--mode", type=str, choices=['dsprites', 'clevr'])
+    program_parser.add_argument("--mode", type=str, choices=['dsprites', 'clevr'], default='dsprites')
     program_parser.add_argument("--path_to_dataset", type=Path, default=Path(__file__).absolute().parent / "data",
                                 help="Path to the dataset directory")
 
@@ -146,5 +152,7 @@ if __name__ == '__main__':
 
     # Parse input
     config = parser.parse_args()
+
+    print(f'Starting a run with {config}')
 
     train(config)
