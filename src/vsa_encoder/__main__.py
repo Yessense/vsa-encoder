@@ -88,7 +88,9 @@ def train(config) -> None:
                          profiler=profiler,
                          callbacks=callbacks,
                          logger=wandb_logger,
-                         check_val_every_n_epoch=5)
+                         check_val_every_n_epoch=5,
+                         gradient_clip_val=5.0
+                         )
 
     if 'ckpt_path' not in dict_args:
         dict_args['ckpt_path'] = None
