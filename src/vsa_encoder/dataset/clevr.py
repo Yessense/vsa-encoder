@@ -71,7 +71,7 @@ class PairedCogentClevr(Dataset):
         obj_images = torch.stack(obj_images, dim=0)
 
         if not self.for_stats:
-            return exchange_labels, image, pair_image, img_scene, pair_scene, obj_images, obj_masks
+            return exchange_labels, image, pair_image
         else:
             return image, self.get_labels(scenes_dict[image_name]['objects'][0])
 
