@@ -43,16 +43,16 @@ class Decoder(nn.Module):
         elif image_size == (1, 64, 64):
             self.cnn_layers = nn.Sequential(
                 nn.ConvTranspose2d(self.in_channels, self.hidden_channels, **cnn_kwargs),
-                nn.ReLU(),
                 nn.BatchNorm2d(self.hidden_channels),
+                nn.GELU(),
 
                 nn.ConvTranspose2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs),
-                nn.ReLU(),
                 nn.BatchNorm2d(self.hidden_channels),
+                nn.GELU(),
 
                 nn.ConvTranspose2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs),
-                nn.ReLU(),
                 nn.BatchNorm2d(self.hidden_channels),
+                nn.GELU(),
 
                 nn.ConvTranspose2d(self.hidden_channels, self.out_channels, **cnn_kwargs)
             )
@@ -60,9 +60,10 @@ class Decoder(nn.Module):
         self.final_activation = torch.nn.Sigmoid()
 
     def forward(self, x):
+        # Linear layers
         x = self.latent_layers(x)
         x = x.view(-1, *self.reshape)
-
+        # Conv layers
         x = self.final_activation(self.cnn_layers(x))
         return x
 
