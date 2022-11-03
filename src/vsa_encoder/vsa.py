@@ -19,5 +19,5 @@ def make_unitary(v):
 
 
 def bind(v1, v2):
-    out = torch.fft.irfft(torch.fft.rfft(v1) * torch.fft.rfft(v2), n=len(v1))
+    out = torch.fft.irfft(torch.fft.rfft(v1) * torch.fft.rfft(v2), dim=-1)
     return out
