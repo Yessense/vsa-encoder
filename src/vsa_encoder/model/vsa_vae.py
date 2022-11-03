@@ -93,7 +93,10 @@ class VSAVAE(pl.LightningModule):
         z = z.reshape(-1, self.n_features, self.latent_dim)
         mask = self.hd_placeholders.data
 
-        z = bind(z, mask)
+        if self.bind_mode == 'fourier':
+            z = bind(z, mask)
+        elif self.bind_mode == 'randn':
+            z = z * mask
 
         return z, mu, log_var
 
