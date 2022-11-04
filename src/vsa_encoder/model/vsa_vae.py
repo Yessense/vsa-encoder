@@ -23,6 +23,7 @@ class VSAVAE(pl.LightningModule):
         parser.add_argument("--n_features", type=int, default=5)
         parser.add_argument("--image_size", type=Tuple[int, int, int], default=(1, 64, 64))  # type: ignore
         parser.add_argument("--latent_dim", type=int, default=1024)
+        parser.add_argument("--bind_mode", type=str, choices=["fourier", "randn"], default="fourier")
 
         # model options
         parser.add_argument("--lr", type=float, default=0.00025)
@@ -35,13 +36,16 @@ class VSAVAE(pl.LightningModule):
                  image_size: Tuple[int, int, int] = (1, 64, 64),
                  lr: float = 0.00030,
                  kld_coef: float = 0.001,
+                 bind_mode: str = 'fourier',
                  latent_dim: int = 1024,
                  **kwargs):
         super().__init__()
+
         # Experiment options
         self.image_size = image_size
         self.latent_dim = latent_dim
         self.n_features = n_features
+        self.bind_mode = bind_mode
 
         # model parameters
         self.lr = lr
@@ -53,10 +57,15 @@ class VSAVAE(pl.LightningModule):
 
         # hd placeholders
 
-        hd_placeholders = torch.randn(1, self.n_features, self.latent_dim)
-        norm = torch.linalg.norm(hd_placeholders, dim=-1)
-        norm = norm.unsqueeze(-1).expand(hd_placeholders.size())
-        hd_placeholders = hd_placeholders / norm
+        if self.bind_mode == 'fourier':
+            hd_placeholders = torch.randn(1, self.n_features, self.latent_dim)
+            norm = torch.linalg.norm(hd_placeholders, dim=-1)
+            norm = norm.unsqueeze(-1).expand(hd_placeholders.size())
+            hd_placeholders = hd_placeholders / norm
+        elif self.bind_mode == 'randn':
+            hd_placeholders = torch.randn(1, self.n_features, self.latent_dim)
+        else:
+            raise ValueError(f"Wrong bind mode {self.bind_mode}")
 
         self.hd_placeholders = nn.Parameter(data=hd_placeholders)
 
@@ -83,7 +92,10 @@ class VSAVAE(pl.LightningModule):
         z = z.reshape(-1, self.n_features, self.latent_dim)
         mask = self.hd_placeholders.data
 
-        z = bind(z, mask)
+        if self.bind_mode == 'fourier':
+            z = bind(z, mask)
+        elif self.bind_mode == 'randn':
+            z = z * mask
 
         return z, mu, log_var
 

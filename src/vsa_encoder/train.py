@@ -21,6 +21,7 @@ from pytorch_lightning.loggers import WandbLogger
 
 from model.vsa_vae import VSAVAE
 from dataset.paired_dsprites import PairedDspritesDataset
+from dataset.clevr import PairedCogentClevr
 
 
 # from dataset import
@@ -41,8 +42,8 @@ def train(config):
     # ------------------------------------------------------------
     wandb_logger = WandbLogger(project=config.mode + '_vsa',
                                name=f'{config.mode} -l {config.latent_dim} '
-                                    f'-s {config.seed} -kl {config.kld_coef}'
-                                    f' -bs {config.batch_size}'
+                                    f'-s {config.seed} -kl {config.kld_coef} '
+                                    f'-bs {config.batch_size} '
                                     f'vsa',
                                log_model=True)
 
@@ -50,15 +51,30 @@ def train(config):
     # Dataset
     # ------------------------------------------------------------
 
-    images_path = config.path_to_dataset / 'dsprite_train.npz'
-    train_path = config.path_to_dataset / 'paired_train.npz'
-    test_path = config.path_to_dataset / 'paired_test.npz'
+    if config.mode == 'dsprites':
+        images_path = config.path_to_dataset / 'dsprite_train.npz'
+        train_path = config.path_to_dataset / 'paired_train.npz'
+        test_path = config.path_to_dataset / 'paired_test.npz'
 
-    train_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=train_path)
-    test_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=test_path)
+        train_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=train_path)
+        test_dataset = PairedDspritesDataset(dsprites_path=images_path, paired_dsprites_path=test_path)
 
-    train_loader = DataLoader(train_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True)
+        train_loader = DataLoader(train_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True,
+                                  shuffle=True)
+        test_loader = DataLoader(test_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True)
+    elif config.mode == 'clevr':
+        dict_args['image_size'] = (3, 128, 128)
+        train_path = config.path_to_dataset / 'train'
+        val_path = config.path_to_dataset / 'val'
+
+        train_dataset = PairedCogentClevr(dataset_path=train_path)
+        test_dataset = PairedCogentClevr(dataset_path=val_path)
+
+        train_loader = DataLoader(train_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True,
+                                  shuffle=True)
+        test_loader = DataLoader(test_dataset, batch_size=config.batch_size, num_workers=10, drop_last=True)
+    else:
+        raise ValueError("Wrong mode")
 
     dict_args['steps_per_epoch'] = len(train_loader)
 
@@ -96,6 +112,11 @@ def train(config):
     profiler = 'simple'  # 'simple'/'advanced'/None
     devices = [int(config.devices)]
 
+    if config.gradient_clip:
+        gradient_clip_val = 5.0
+    else:
+        gradient_clip_val = None
+
     # trainer
     trainer = pl.Trainer(accelerator='gpu',
                          devices=devices,
@@ -104,7 +125,7 @@ def train(config):
                          callbacks=callbacks,
                          logger=wandb_logger,
                          check_val_every_n_epoch=5,
-                         gradient_clip_val=5.0)
+                         gradient_clip_val=gradient_clip_val)
 
     if 'ckpt_path' not in dict_args:
         dict_args['ckpt_path'] = None
@@ -130,19 +151,21 @@ if __name__ == '__main__':
     # add PROGRAM level args
     program_parser = parser.add_argument_group('program')
 
+
     # logger parameters
     program_parser.add_argument("--log_model", default=True)
     program_parser.add_argument("--logger_dir", type=str, default=None)
 
     # dataset parameters
     program_parser.add_argument("--mode", type=str, choices=['dsprites', 'clevr'], default='dsprites')
-    program_parser.add_argument("--path_to_dataset", type=Path, default=Path(__file__).absolute().parent / "data",
+    program_parser.add_argument("--path_to_dataset", type=Path, default=Path(__file__).absolute().parent.parent.parent / "data",
                                 help="Path to the dataset directory")
 
     # Experiment parameters
     program_parser.add_argument("--batch_size", type=int, default=4)
     program_parser.add_argument("--test", type=bool, default=False)
     program_parser.add_argument("--seed", type=int, default=42)
+    program_parser.add_argument("--gradient_clip", type=bool, default=True)
 
     # Add model specific args
     parser = VSAVAE.add_model_specific_args(parent_parser=parser)
