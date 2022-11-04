@@ -1,4 +1,4 @@
-program: ~/vsa-encoder/src/vsa_encoder/train.py
+program: vsa_encoder/train.py
 method: grid
 metric:
   name: "Validation/iou total"
