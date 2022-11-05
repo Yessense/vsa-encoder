@@ -23,7 +23,9 @@ class VSAVAE(pl.LightningModule):
         parser.add_argument("--n_features", type=int, default=5)
         parser.add_argument("--image_size", type=Tuple[int, int, int], default=(1, 64, 64))  # type: ignore
         parser.add_argument("--latent_dim", type=int, default=1024)
+        parser.add_argument("--normalization", type=bool, default=False)
         parser.add_argument("--bind_mode", type=str, choices=["fourier", "randn"], default="fourier")
+
 
         # model options
         parser.add_argument("--lr", type=float, default=0.00025)
@@ -38,6 +40,7 @@ class VSAVAE(pl.LightningModule):
                  kld_coef: float = 0.001,
                  bind_mode: str = 'fourier',
                  latent_dim: int = 1024,
+                 normalization: bool = False,
                  **kwargs):
         super().__init__()
 
@@ -46,6 +49,7 @@ class VSAVAE(pl.LightningModule):
         self.latent_dim = latent_dim
         self.n_features = n_features
         self.bind_mode = bind_mode
+        self.normalization = normalization # sum normalization on number of features
 
         # model parameters
         self.lr = lr
@@ -106,10 +110,14 @@ class VSAVAE(pl.LightningModule):
         # Reconstruct image
         donor_features_exept_one = torch.where(exchange_labels, image_features, donor_features)
         donor_features_exept_one = torch.sum(donor_features_exept_one, dim=1)
+        if self.normalization:
+            donor_features_exept_one = donor_features_exept_one / self.n_features
 
         # Donor image
         image_features_exept_one = torch.where(exchange_labels, donor_features, image_features)
         image_features_exept_one = torch.sum(image_features_exept_one, dim=1)
+        if self.normalization:
+            donor_features_exept_one = image_features_exept_one / self.n_features
 
         return donor_features_exept_one, image_features_exept_one
 
