@@ -111,13 +111,13 @@ class VSAVAE(pl.LightningModule):
         donor_features_exept_one = torch.where(exchange_labels, image_features, donor_features)
         donor_features_exept_one = torch.sum(donor_features_exept_one, dim=1)
         if self.normalization:
-            donor_features_exept_one = donor_features_exept_one / self.n_features
+            donor_features_exept_one = donor_features_exept_one / math.sqrt(self.n_features)
 
         # Donor image
         image_features_exept_one = torch.where(exchange_labels, donor_features, image_features)
         image_features_exept_one = torch.sum(image_features_exept_one, dim=1)
         if self.normalization:
-            donor_features_exept_one = image_features_exept_one / self.n_features
+            donor_features_exept_one = image_features_exept_one / math.sqrt(self.n_features)
 
         return donor_features_exept_one, image_features_exept_one
 
