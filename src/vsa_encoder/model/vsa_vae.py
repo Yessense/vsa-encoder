@@ -26,7 +26,6 @@ class VSAVAE(pl.LightningModule):
         parser.add_argument("--normalization", type=bool, default=False)
         parser.add_argument("--bind_mode", type=str, choices=["fourier", "randn"], default="fourier")
 
-
         # model options
         parser.add_argument("--lr", type=float, default=0.00025)
         parser.add_argument("--kld_coef", type=float, default=0.001)
@@ -49,7 +48,7 @@ class VSAVAE(pl.LightningModule):
         self.latent_dim = latent_dim
         self.n_features = n_features
         self.bind_mode = bind_mode
-        self.normalization = normalization # sum normalization on number of features
+        self.normalization = normalization  # sum normalization on number of features
 
         # model parameters
         self.lr = lr
@@ -83,6 +82,14 @@ class VSAVAE(pl.LightningModule):
         else:
             # Reconstruction mode
             return mu
+
+    def get_features(self, x):
+        """ Get features with shape -> [batch_size, n_features, latent_dim]"""
+        mu, log_var = self.encoder(x)
+
+        z = self.reparametrize(mu, log_var)
+        z = z.reshape(-1, self.n_features, self.latent_dim)
+        return z
 
     def encode(self, x):
         """ Get features multiplied by placeholders

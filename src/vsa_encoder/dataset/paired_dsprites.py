@@ -19,7 +19,7 @@ class Dsprites(Dataset):
         self.max_exchanges = max_exchanges
 
         # Load npz numpy archive
-        dataset_zip = np.load(path)
+        dataset_zip = np.load(path, allow_pickle=True, encoding = 'latin1')
 
         # Images: numpy array -> (737280, 64, 64)
         self.imgs = dataset_zip['imgs']
@@ -27,6 +27,7 @@ class Dsprites(Dataset):
         # Labels: numpy array -> (737280, 5)
         # Each column contains int value in range of `features_count`
         self.labels = dataset_zip['latents_classes'][:, 1:]
+        self.possible_values = dataset_zip['metadata'][()]['latents_possible_values']
 
         # ----------------------------------------
         # features info
@@ -50,6 +51,8 @@ class Dsprites(Dataset):
 
         self.n_features = 5
 
+    def __len__(self):
+        return self.size
     def __getitem__(self, idx):
         return self.imgs[idx], self.labels[idx]
 
