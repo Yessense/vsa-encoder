@@ -18,6 +18,19 @@ def make_unitary(v):
     return (torch.fft.ifft(fft_unit, n=len(v))).real
 
 
+def pow(hd_vector, power):
+    hd_vector = torch.fft.ifft(torch.fft.fft(hd_vector) ** power, dim=-1).real
+    return hd_vector
+
+
 def bind(v1, v2):
     out = torch.fft.irfft(torch.fft.rfft(v1) * torch.fft.rfft(v2), dim=-1)
     return out
+
+
+def sim(self, other):
+    return torch.dot(self, other) / (torch.linalg.norm(self) * torch.linalg.norm(other))
+
+
+def unbind(v1, v2):
+    return bind(v1, pow(v2, -1))

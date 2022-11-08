@@ -1,6 +1,6 @@
 import math
 from argparse import ArgumentParser
-from typing import Tuple
+from typing import Tuple, Optional
 
 import pytorch_lightning as pl
 import wandb
@@ -23,7 +23,7 @@ class VSAVAE(pl.LightningModule):
         parser.add_argument("--n_features", type=int, default=5)
         parser.add_argument("--image_size", type=Tuple[int, int, int], default=(1, 64, 64))  # type: ignore
         parser.add_argument("--latent_dim", type=int, default=1024)
-        parser.add_argument("--normalization", type=bool, default=False)
+        parser.add_argument("--normalization", default=None)
         parser.add_argument("--bind_mode", type=str, choices=["fourier", "randn"], default="fourier")
 
         # model options
@@ -39,7 +39,7 @@ class VSAVAE(pl.LightningModule):
                  kld_coef: float = 0.001,
                  bind_mode: str = 'fourier',
                  latent_dim: int = 1024,
-                 normalization: bool = False,
+                 normalization: Optional[str] = None,
                  **kwargs):
         super().__init__()
 
@@ -117,14 +117,20 @@ class VSAVAE(pl.LightningModule):
         # Reconstruct image
         donor_features_exept_one = torch.where(exchange_labels, image_features, donor_features)
         donor_features_exept_one = torch.sum(donor_features_exept_one, dim=1)
-        if self.normalization:
+        if self.normalization == 'n_features':
             donor_features_exept_one = donor_features_exept_one / math.sqrt(self.n_features)
+        elif self.normalization == 'linalg_norm':
+            norm = torch.linalg.norm(donor_features_exept_one, dim=-1).unsqueeze(-1)
+            donor_features_exept_one = donor_features_exept_one / norm
 
         # Donor image
         image_features_exept_one = torch.where(exchange_labels, donor_features, image_features)
         image_features_exept_one = torch.sum(image_features_exept_one, dim=1)
-        if self.normalization:
-            donor_features_exept_one = image_features_exept_one / math.sqrt(self.n_features)
+        if self.normalization == 'n_features':
+            image_features_exept_one = image_features_exept_one / math.sqrt(self.n_features)
+        elif self.normalization == 'linalg_norm':
+            norm = torch.linalg.norm(image_features_exept_one, dim=-1).unsqueeze(-1)
+            image_features_exept_one = image_features_exept_one / norm
 
         return donor_features_exept_one, image_features_exept_one
 
