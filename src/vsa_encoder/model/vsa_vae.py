@@ -63,12 +63,16 @@ class VSAVAE(pl.LightningModule):
         self.encoder = Encoder(latent_dim=latent_dim, image_size=image_size, n_features=n_features)
         self.decoder = Decoder(latent_dim=latent_dim + 2 * self.coords_latent_dim, image_size=image_size)
 
-
         hd_placeholders = torch.randn(1, self.n_features - 2, self.latent_dim)
         norm = torch.linalg.norm(hd_placeholders, dim=-1)
         norm = norm.unsqueeze(-1).expand(hd_placeholders.size())
         hd_placeholders = hd_placeholders / norm
-        self.mlp = nn.Sequential(
+        self.mlp_x = nn.Sequential(
+            nn.Linear(self.latent_dim, self.latent_dim // 2),
+            nn.ReLU(),
+            nn.Linear(self.latent_dim // 2, self.coords_latent_dim)
+        )
+        self.mlp_y = nn.Sequential(
             nn.Linear(self.latent_dim, self.latent_dim // 2),
             nn.ReLU(),
             nn.Linear(self.latent_dim // 2, self.coords_latent_dim)
@@ -124,23 +128,20 @@ class VSAVAE(pl.LightningModule):
         donor_features_exept_one = torch.where(exchange_labels, image_features, donor_features)
         # donor_features_exept_one = torch.sum(donor_features_exept_one, dim=1)
 
-        coords_vectors = self.mlp(donor_features_exept_one[:, 3:])
-        coords_vectors = torch.flatten(coords_vectors, start_dim=1)
+        coord_x = self.mlp_x(donor_features_exept_one[:, 3])
+        coord_y = self.mlp_y(donor_features_exept_one[:, 4])
+        # coords_vectors = torch.flatten(coords_vectors, start_dim=1)
         feats_vectors = torch.sum(donor_features_exept_one[:, :3], dim=1)
-        donor_features_exept_one = torch.cat((coords_vectors, feats_vectors), dim=1)
-
-
-
-
+        donor_features_exept_one = torch.cat((feats_vectors, coord_x, coord_y), dim=1)
 
         # Donor image
         image_features_exept_one = torch.where(exchange_labels, donor_features, image_features)
 
-
-        coords_vectors = self.mlp(image_features_exept_one[:, 3:])
-        coords_vectors = torch.flatten(coords_vectors, start_dim=1)
+        coord_x = self.mlp_x(image_features_exept_one[:, 3])
+        coord_y = self.mlp_y(image_features_exept_one[:, 4])
+        # coords_vectors = torch.flatten(coords_vectors, start_dim=1)
         feats_vectors = torch.sum(image_features_exept_one[:, :3], dim=1)
-        image_features_exept_one = torch.cat((coords_vectors, feats_vectors), dim=1)
+        image_features_exept_one = torch.cat((feats_vectors, coord_x, coord_y), dim=1)
 
         return donor_features_exept_one, image_features_exept_one
 
@@ -261,4 +262,3 @@ if __name__ == '__main__':
         total_loss = (image_loss + donor_loss) * 0.5 + vsavae.kld_coef * kld_loss
         total_loss.backward()
         print("Done")
-
