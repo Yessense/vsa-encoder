@@ -107,12 +107,14 @@ class VSAVAE(pl.LightningModule):
         z = z.reshape(-1, self.n_features, self.latent_dim)
         mask = self.hd_placeholders.data
 
+        out = torch.zeros_like(z)
         if self.bind_mode == 'fourier':
-            z[:, :3] = bind(z[:, :3], mask)
+            out[:, :3] = bind(z[:, :3], mask)
+            out[:, 3:] = z[:, 3:]
         elif self.bind_mode == 'randn':
-            z[:, :3] = z[:, :3] * mask
+            out[:, :3] = z[:, :3] * mask
 
-        return z, mu, log_var
+        return out, mu, log_var
 
     def exchange(self, image_features, donor_features, exchange_labels):
         # Exchange
@@ -244,7 +246,19 @@ class VSAVAE(pl.LightningModule):
 
 if __name__ == '__main__':
     vsavae = VSAVAE()
-    x = torch.randn(10, 1, 64, 64)
-    exchanges = torch.randint(0, 2, (10, 5, 1), dtype=bool)
+    with torch.autograd.set_detect_anomaly(True):
+        x = torch.randn(10, 1, 64, 64)
+        exchanges = torch.randint(0, 2, (10, 5, 1), dtype=bool)
 
-    out = vsavae.forward(x, x, exchanges)
+        out = vsavae.forward(x, x, exchanges)
+
+        reconstructions, mus, log_vars = out
+
+        mus = sum(mus) * 2 ** -0.5
+        log_vars = sum(mus) * 2 ** -0.5
+
+        image_loss, donor_loss, kld_loss = vsavae.loss_f((x, x), reconstructions, mus, log_vars)
+        total_loss = (image_loss + donor_loss) * 0.5 + vsavae.kld_coef * kld_loss
+        total_loss.backward()
+        print("Done")
+
