@@ -24,6 +24,7 @@ class VSAVAE(pl.LightningModule):
         parser.add_argument("--image_size", type=Tuple[int, int, int], default=(1, 64, 64))  # type: ignore
         parser.add_argument("--latent_dim", type=int, default=1024)
         parser.add_argument("--normalization", default=None)
+        parser.add_argument("--partially_encoding", type=bool, default=False)
         parser.add_argument("--bind_mode", type=str, choices=["fourier", "randn"], default="fourier")
 
         # model options
@@ -40,6 +41,7 @@ class VSAVAE(pl.LightningModule):
                  bind_mode: str = 'fourier',
                  latent_dim: int = 1024,
                  normalization: Optional[str] = None,
+                 partially_encoding: bool = False,
                  **kwargs):
         super().__init__()
 
@@ -54,21 +56,23 @@ class VSAVAE(pl.LightningModule):
         self.lr = lr
         self.kld_coef = kld_coef
 
+        # hd placeholders
+        self.coords_latent_dim = 32
+
         # Layers
         self.encoder = Encoder(latent_dim=latent_dim, image_size=image_size, n_features=n_features)
-        self.decoder = Decoder(latent_dim=latent_dim, image_size=image_size)
+        self.decoder = Decoder(latent_dim=latent_dim + 2 * self.coords_latent_dim, image_size=image_size)
 
-        # hd placeholders
 
-        if self.bind_mode == 'fourier':
-            hd_placeholders = torch.randn(1, self.n_features, self.latent_dim)
-            norm = torch.linalg.norm(hd_placeholders, dim=-1)
-            norm = norm.unsqueeze(-1).expand(hd_placeholders.size())
-            hd_placeholders = hd_placeholders / norm
-        elif self.bind_mode == 'randn':
-            hd_placeholders = torch.randn(1, self.n_features, self.latent_dim)
-        else:
-            raise ValueError(f"Wrong bind mode {self.bind_mode}")
+        hd_placeholders = torch.randn(1, self.n_features - 2, self.latent_dim)
+        norm = torch.linalg.norm(hd_placeholders, dim=-1)
+        norm = norm.unsqueeze(-1).expand(hd_placeholders.size())
+        hd_placeholders = hd_placeholders / norm
+        self.mlp = nn.Sequential(
+            nn.Linear(self.latent_dim, self.latent_dim // 2),
+            nn.ReLU(),
+            nn.Linear(self.latent_dim // 2, self.coords_latent_dim)
+        )
 
         self.hd_placeholders = nn.Parameter(data=hd_placeholders)
 
@@ -104,9 +108,9 @@ class VSAVAE(pl.LightningModule):
         mask = self.hd_placeholders.data
 
         if self.bind_mode == 'fourier':
-            z = bind(z, mask)
+            z[:, :3] = bind(z[:, :3], mask)
         elif self.bind_mode == 'randn':
-            z = z * mask
+            z[:, :3] = z[:, :3] * mask
 
         return z, mu, log_var
 
@@ -116,21 +120,25 @@ class VSAVAE(pl.LightningModule):
 
         # Reconstruct image
         donor_features_exept_one = torch.where(exchange_labels, image_features, donor_features)
-        donor_features_exept_one = torch.sum(donor_features_exept_one, dim=1)
-        if self.normalization == 'n_features':
-            donor_features_exept_one = donor_features_exept_one / math.sqrt(self.n_features)
-        elif self.normalization == 'linalg_norm':
-            norm = torch.linalg.norm(donor_features_exept_one, dim=-1).unsqueeze(-1)
-            donor_features_exept_one = donor_features_exept_one / norm
+        # donor_features_exept_one = torch.sum(donor_features_exept_one, dim=1)
+
+        coords_vectors = self.mlp(donor_features_exept_one[:, 3:])
+        coords_vectors = torch.flatten(coords_vectors, start_dim=1)
+        feats_vectors = torch.sum(donor_features_exept_one[:, :3], dim=1)
+        donor_features_exept_one = torch.cat((coords_vectors, feats_vectors), dim=1)
+
+
+
+
 
         # Donor image
         image_features_exept_one = torch.where(exchange_labels, donor_features, image_features)
-        image_features_exept_one = torch.sum(image_features_exept_one, dim=1)
-        if self.normalization == 'n_features':
-            image_features_exept_one = image_features_exept_one / math.sqrt(self.n_features)
-        elif self.normalization == 'linalg_norm':
-            norm = torch.linalg.norm(image_features_exept_one, dim=-1).unsqueeze(-1)
-            image_features_exept_one = image_features_exept_one / norm
+
+
+        coords_vectors = self.mlp(image_features_exept_one[:, 3:])
+        coords_vectors = torch.flatten(coords_vectors, start_dim=1)
+        feats_vectors = torch.sum(image_features_exept_one[:, :3], dim=1)
+        image_features_exept_one = torch.cat((coords_vectors, feats_vectors), dim=1)
 
         return donor_features_exept_one, image_features_exept_one
 
@@ -237,6 +245,6 @@ class VSAVAE(pl.LightningModule):
 if __name__ == '__main__':
     vsavae = VSAVAE()
     x = torch.randn(10, 1, 64, 64)
-    exchanges = torch.randint(0, 2, (10, 5), dtype=bool)
+    exchanges = torch.randint(0, 2, (10, 5, 1), dtype=bool)
 
     out = vsavae.forward(x, x, exchanges)

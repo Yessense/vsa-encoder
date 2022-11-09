@@ -328,16 +328,16 @@ if __name__ == '__main__':
     # # heart bottom right
     # stats.simple_process_image([2, 0, 0, 31, 31],
     #                            multiply_by_placeholders=True)
-    #
+
     # --------------------------------------------------
     # -- Restore from nth combination of features
     # --------------------------------------------------
 
-    # image_idx = random.randint(0, len(stats.dataset))
+    image_idx = random.randint(0, len(stats.dataset))
     # stats.restore_from_nth_features(4, image_idx)
     # stats.restore_from_nth_features(3, image_idx)
-    # stats.restore_from_nth_features(2, image_idx)
-    # stats.restore_from_nth_features(1, image_idx)
+    stats.restore_from_nth_features(2, image_idx)
+    stats.restore_from_nth_features(1, image_idx)
 
     # --------------------------------------------------
     # -- Get latents
@@ -345,7 +345,7 @@ if __name__ == '__main__':
 
     # latents = stats.get_latents(num_latents=1000, draw_latents=True, multiply_by_placeholders=True)
     # latents = stats.get_latents(num_latents=1000, draw_latents=True, multiply_by_placeholders=False)
-    # latents = stats.get_latents(num_latents=10000, draw_latents=True, multiply_by_placeholders=False)
+    # latents = stats.get_latents(num_latents=10000, draw_latents=True, multiply_by_placeholders=True)
 
     # --------------------------------------------------
     # -- Check vsa
@@ -357,17 +357,25 @@ if __name__ == '__main__':
     # -- Codebook of mean vectors
     # --------------------------------------------------
 
-    stats.set_codebook(40_000)
-    stats.decode_from_codebook([0, 0, 0, 0, 0])
-    stats.decode_from_codebook([1, 0, 0, 0, 0])
-    stats.decode_from_codebook([2, 0, 0, 0, 0])
+    stats.set_codebook(10_000)
+    # stats.decode_from_codebook([0, 0, 0, 0, 0])
+    # stats.decode_from_codebook([1, 0, 0, 0, 0])
+    # stats.decode_from_codebook([2, 0, 0, 0, 0])
+    #
+    # stats.decode_from_codebook([0, 0, 0, 31, 0])
+    # stats.decode_from_codebook([1, 0, 0, 31, 0])
+    # stats.decode_from_codebook([2, 0, 0, 31, 0])
+    #
+    # stats.decode_from_codebook([0, 1, 0, 31, 31])
+    # stats.decode_from_codebook([1, 0, 0, 31, 31])
+    # stats.decode_from_codebook([2, 0, 0, 31, 31])
 
-    stats.decode_from_codebook([0, 0, 0, 31, 0])
-    stats.decode_from_codebook([1, 0, 0, 31, 0])
-    stats.decode_from_codebook([2, 0, 0, 31, 0])
+    stats.decode_from_codebook([1, 1, 0, 15, 15])
+    stats.decode_from_codebook([1, 3, 0, 15, 15])
+    stats.decode_from_codebook([1, 4, 0, 15, 15])
 
-    stats.decode_from_codebook([0, 0, 0, 31, 31])
-    stats.decode_from_codebook([1, 0, 0, 31, 31])
-    stats.decode_from_codebook([2, 0, 0, 31, 31])
+    stats.decode_from_codebook([1, 1, 10, 15, 15])
+    stats.decode_from_codebook([1, 3, 20, 15, 15])
+    stats.decode_from_codebook([1, 4, 30, 15, 15])
 
     print("Done")
