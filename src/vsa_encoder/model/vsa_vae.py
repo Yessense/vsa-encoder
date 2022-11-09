@@ -84,8 +84,11 @@ class VSAVAE(pl.LightningModule):
 
     def reparametrize(self, mu, log_var):
         if self.training:
+            out = torch.zeros_like(mu)
             std = torch.exp(0.5 * log_var)
             eps = torch.randn_like(std)
+            out[:, :3] = mu[:, :3] + std[:, :3] * eps[:, :3]
+            out[:, 3:] = mu[:, 3:]
             return mu + std * eps
         else:
             # Reconstruction mode
