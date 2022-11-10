@@ -89,15 +89,23 @@ class Stats:
             placeholders = self.model.hd_placeholders.data
 
             if self.model.bind_mode == 'fourier':
-                features = bind(features, placeholders)
-            elif self.model.bind_mode == 'randn':
-                features = features * placeholders
+                out = torch.zeros_like(features)
+                out[:, :3] = bind(features[:, :3], placeholders)
+                out[:, 3:] = features[:, 3:]
+            # elif self.model.bind_mode == 'randn':
+            #     features = features * placeholders
             else:
                 raise ValueError("Wrong bind mode")
 
+        coord_x = self.model.mlp_x(out[:, 3])
+        coord_y = self.model.mlp_y(out[:, 4])
+        # coords_vectors = torch.flatten(coords_vectors, start_dim=1)
+        feats_vectors = torch.sum(out[:, :3], dim=1)
+        image_latent = torch.cat((feats_vectors, coord_x, coord_y), dim=1)
+
         # sum all features to one resulting image
         # dim=1, dim=features
-        image_latent = torch.sum(features, dim=-2)
+        # image_latent = torch.sum(, dim=-2)
 
         decoded_image = self.model.decoder(image_latent)
 
@@ -114,7 +122,7 @@ class Stats:
                                               'Image', 'Decoded Image',
                                               title=title)
 
-        return image, labels, features, image_latent, decoded_image
+        return image, labels, features, image_latent, decoded_image, out
 
     def decode_from_codebook(self, feature_values, display: bool=True):
         # feature_names ('shape', 'scale', 'orientation', 'posX', 'posY')
@@ -196,13 +204,13 @@ class Stats:
 
     def check_vsa(self, feature_values: List):
 
-        image, labels, features, image_latent, decoded_image = self.simple_process_image(feature_values,
+        image, labels, features, image_latent, decoded_image, out = self.simple_process_image(feature_values,
                                                                                          multiply_by_placeholders=True,
                                                                                          display=True)
 
         hd_placeholders = self.model.hd_placeholders.data.squeeze(0)
 
-        for i, feature_vector in enumerate(features[0]):
+        for i, feature_vector in enumerate(out[0][:3]):
             output_vec = unbind(image_latent[0], feature_vector)
 
             similarities = []
@@ -278,7 +286,7 @@ if __name__ == '__main__':
     # add PROGRAM level args
     program_parser = parser.add_argument_group('program')
     program_parser.add_argument("--model_checkpoint_path", type=Path,
-                                default='/home/yessense/PycharmProjects/vsa-encoder/checkpoints/epoch=194-step=304590.ckpt')
+                                default='/home/yessense/PycharmProjects/vsa-encoder/checkpoints/checkpoints/epoch=179-step=281160.ckpt')
     program_parser.add_argument("--dataset_path", type=Path,
                                 default="/home/yessense/PycharmProjects/vsa-encoder/one_exchange/dsprite_train.npz")
 
@@ -299,7 +307,7 @@ if __name__ == '__main__':
     # feature_names ('shape', 'scale', 'orientation', 'posX', 'posY')
     # features_count [3, 6, 40, 32, 32]
     # stats.simple_process_image([0, 0, 0, 0, 0],
-    #                            multiply_by_placeholders=False)
+                               # multiply_by_placeholders=False)
     # # top left
     # stats.simple_process_image([0, 0, 0, 0, 0],
     #                            multiply_by_placeholders=True)
@@ -333,11 +341,11 @@ if __name__ == '__main__':
     # -- Restore from nth combination of features
     # --------------------------------------------------
 
-    image_idx = random.randint(0, len(stats.dataset))
+    # image_idx = random.randint(0, len(stats.dataset))
     # stats.restore_from_nth_features(4, image_idx)
     # stats.restore_from_nth_features(3, image_idx)
-    stats.restore_from_nth_features(2, image_idx)
-    stats.restore_from_nth_features(1, image_idx)
+    # stats.restore_from_nth_features(2, image_idx)
+    # stats.restore_from_nth_features(1, image_idx)
 
     # --------------------------------------------------
     # -- Get latents
@@ -351,13 +359,13 @@ if __name__ == '__main__':
     # -- Check vsa
     # --------------------------------------------------
 
-    # processed_latents = stats.check_vsa([2, 2, 2, 24, 0])
+    processed_latents = stats.check_vsa([2, 2, 2, 24, 0])
 
     # --------------------------------------------------
     # -- Codebook of mean vectors
     # --------------------------------------------------
 
-    stats.set_codebook(10_000)
+    # stats.set_codebook(10_000)
     # stats.decode_from_codebook([0, 0, 0, 0, 0])
     # stats.decode_from_codebook([1, 0, 0, 0, 0])
     # stats.decode_from_codebook([2, 0, 0, 0, 0])
@@ -370,12 +378,12 @@ if __name__ == '__main__':
     # stats.decode_from_codebook([1, 0, 0, 31, 31])
     # stats.decode_from_codebook([2, 0, 0, 31, 31])
 
-    stats.decode_from_codebook([1, 1, 0, 15, 15])
-    stats.decode_from_codebook([1, 3, 0, 15, 15])
-    stats.decode_from_codebook([1, 4, 0, 15, 15])
-
-    stats.decode_from_codebook([1, 1, 10, 15, 15])
-    stats.decode_from_codebook([1, 3, 20, 15, 15])
-    stats.decode_from_codebook([1, 4, 30, 15, 15])
-
+    # stats.decode_from_codebook([1, 1, 0, 15, 15])
+    # stats.decode_from_codebook([1, 3, 0, 15, 15])
+    # stats.decode_from_codebook([1, 4, 0, 15, 15])
+    #
+    # stats.decode_from_codebook([1, 1, 10, 15, 15])
+    # stats.decode_from_codebook([1, 3, 20, 15, 15])
+    # stats.decode_from_codebook([1, 4, 30, 15, 15])
+    #
     print("Done")
