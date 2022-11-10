@@ -116,7 +116,7 @@ class Stats:
 
         return image, labels, features, image_latent, decoded_image
 
-    def decode_from_codebook(self, feature_values, display: bool=True):
+    def decode_from_codebook(self, feature_values, display: bool = True):
         # feature_names ('shape', 'scale', 'orientation', 'posX', 'posY')
         # features_count [3, 6, 40, 32, 32]
         image_idx: int = self.dataset._get_element_pos(feature_values)
@@ -194,11 +194,61 @@ class Stats:
 
         self.codebook = codebook
 
-    def check_vsa(self, feature_values: List):
+    def check_multiple_vsa(self, n_images):
+        accuracy = 0
+        accuracies = [0] * 5
+        for _ in tqdm(range(n_images)):
+            img_idx = random.randrange(0, len(self.dataset))
+            image, labels = self.dataset[img_idx]
+            image = torch.from_numpy(image).to(self.device).float()
+            image = torch.unsqueeze(image, 0)
+            image = torch.unsqueeze(image, 0)
 
-        image, labels, features, image_latent, decoded_image = self.simple_process_image(feature_values,
-                                                                                         multiply_by_placeholders=True,
-                                                                                         display=True)
+            # labels = labels.to(self.device)
+
+            features = self.model.get_features(image)
+
+            placeholders = self.model.hd_placeholders.data
+
+            feature_binded = bind(features, placeholders)
+
+            image_latent = torch.sum(feature_binded, dim=-2)
+
+            hd_placeholders = self.model.hd_placeholders.data.squeeze(0)
+
+            for i, feature_vector in enumerate(features[0]):
+                output_vec = unbind(image_latent[0], feature_vector)
+
+                similarities = []
+                for j, hd_placeholder in enumerate(hd_placeholders):
+                    similarity = sim(output_vec, hd_placeholder)
+                    similarities.append(similarity)
+                    # print(f'Feature unbinded {i} is similar to feature {j} for {similarity}')
+
+                similarities = torch.stack(similarities, dim=0)
+                max_pos = torch.argmax(similarities, dim=0)
+                accuracy += max_pos == i
+                accuracies[i] += max_pos == i
+                # print(f'Feature unbinded {i} is most similar to feature {max_pos}')
+        print(accuracy / n_images / 5)
+        print([i / n_images for i in accuracies])
+
+    def check_vsa(self, feature_values: List):
+        image_idx: int = self.dataset._get_element_pos(feature_values)
+        image, labels = self.dataset[image_idx]
+        image = torch.from_numpy(image).to(self.device).float()
+        image = torch.unsqueeze(image, 0)
+        image = torch.unsqueeze(image, 0)
+
+        # labels = labels.to(self.device)
+
+        features = self.model.get_features(image)
+
+        placeholders = self.model.hd_placeholders.data
+
+        feature_binded = bind(features, placeholders)
+
+        image_latent = torch.sum(feature_binded, dim=-2)
 
         hd_placeholders = self.model.hd_placeholders.data.squeeze(0)
 
@@ -209,11 +259,11 @@ class Stats:
             for j, hd_placeholder in enumerate(hd_placeholders):
                 similarity = sim(output_vec, hd_placeholder)
                 similarities.append(similarity)
-                print(f'Feature unbinded {i} is similar to feature {j} for {similarity}')
+                # print(f'Feature unbinded {i} is similar to feature {j} for {similarity}')
 
             similarities = torch.stack(similarities, dim=0)
             max_pos = torch.argmax(similarities, dim=0)
-            print(f'Feature unbinded {i} is most similar to feature {max_pos}')
+            # print(f'Feature unbinded {i} is most similar to feature {max_pos}')
 
             # print("cs")
 
@@ -351,23 +401,24 @@ if __name__ == '__main__':
     # -- Check vsa
     # --------------------------------------------------
 
-    # processed_latents = stats.check_vsa([2, 2, 2, 24, 0])
+    # processed_latents = stats.check_vsa([1, 3, 4, 24, 0])
+    check_vsa2 = stats.check_multiple_vsa(1000)
 
     # --------------------------------------------------
     # -- Codebook of mean vectors
     # --------------------------------------------------
 
-    stats.set_codebook(40_000)
-    stats.decode_from_codebook([0, 0, 0, 0, 0])
-    stats.decode_from_codebook([1, 0, 0, 0, 0])
-    stats.decode_from_codebook([2, 0, 0, 0, 0])
-
-    stats.decode_from_codebook([0, 0, 0, 31, 0])
-    stats.decode_from_codebook([1, 0, 0, 31, 0])
-    stats.decode_from_codebook([2, 0, 0, 31, 0])
-
-    stats.decode_from_codebook([0, 0, 0, 31, 31])
-    stats.decode_from_codebook([1, 0, 0, 31, 31])
-    stats.decode_from_codebook([2, 0, 0, 31, 31])
-
+    # stats.set_codebook(40_000)
+    # stats.decode_from_codebook([0, 0, 0, 0, 0])
+    # stats.decode_from_codebook([1, 0, 0, 0, 0])
+    # stats.decode_from_codebook([2, 0, 0, 0, 0])
+    #
+    # stats.decode_from_codebook([0, 0, 0, 31, 0])
+    # stats.decode_from_codebook([1, 0, 0, 31, 0])
+    # stats.decode_from_codebook([2, 0, 0, 31, 0])
+    #
+    # stats.decode_from_codebook([0, 0, 0, 31, 31])
+    # stats.decode_from_codebook([1, 0, 0, 31, 31])
+    # stats.decode_from_codebook([2, 0, 0, 31, 31])
+    #
     print("Done")
