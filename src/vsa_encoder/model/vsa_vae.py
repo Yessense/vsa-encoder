@@ -197,7 +197,7 @@ class VSAVAE(pl.LightningModule):
         image_loss, donor_loss = self.loss_f((image, donor),
                                              reconstructions)
 
-        total_loss = (image_loss + donor_loss) * 0.5 + self.kld_coef * kld_loss
+        total_loss = (image_loss + donor_loss) * 0.5 # + self.kld_coef * kld_loss
 
         iou_image = iou_pytorch(reconstructions[0], image)
         iou_donor = iou_pytorch(reconstructions[1], donor)
@@ -244,8 +244,8 @@ class VSAVAE(pl.LightningModule):
 
         # kld_loss = -0.5 * torch.sum(1 + log_vars - mus.pow(2) - log_vars.exp())
 
-        if reduction == 'mean':
-            batch_size = mus.shape[0]
+        # if reduction == 'mean':
+        #     batch_size = mus.shape[0]
             # kld_loss = kld_loss / batch_size
 
         return image_loss, donor_loss
