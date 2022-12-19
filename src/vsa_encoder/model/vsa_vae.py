@@ -116,7 +116,7 @@ class VSAVAE(pl.LightningModule):
         z = self.encoder(x)
 
         # z = self.reparametrize(mu, log_var)
-        x = z.reshape(-1, self.n_features, self.latent_dim)
+        z = z.reshape(-1, self.n_features, self.latent_dim)
         mask = self.hd_placeholders.data
 
         out = torch.zeros_like(z)
@@ -271,15 +271,14 @@ if __name__ == '__main__':
 
         out = vsavae.forward(x, x, exchanges)
 
-        reconstructions, mus, log_vars = out
+        reconstructions = out
 
         # mus = sum(mus) * 2 ** -0.5
         # log_vars = sum(mus) * 2 ** -0.5
 
-        image_loss, donor_loss, kld_loss = vsavae.loss_f((x, x),
-                                                         reconstructions, mus,
-                                                         log_vars)
+        image_loss, donor_loss = vsavae.loss_f((x, x),
+                                                         reconstructions)
         total_loss = (
-                             image_loss + donor_loss) * 0.5 + vsavae.kld_coef * kld_loss
+                             image_loss + donor_loss) * 0.5
         total_loss.backward()
         print("Done")
