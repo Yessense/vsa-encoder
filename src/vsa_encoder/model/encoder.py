@@ -2,7 +2,7 @@ from typing import Tuple
 
 import torch
 from torch import nn
-from utils import product
+from src.vsa_encoder.utils import product
 
 
 class Encoder(nn.Module):
@@ -20,27 +20,38 @@ class Encoder(nn.Module):
         # NN parameters
         self.hidden_channels = hidden_channels
         self.in_channels = self.image_size[0]
-        self.out_channels = 2 * self.latent_dim * self.n_features
+
+
+        self.out_channels = 1 * self.latent_dim * self.n_features
         self.activation = torch.nn.ReLU()
         cnn_kwargs = dict(kernel_size=4, stride=2, padding=1)
 
         if image_size == (3, 128, 128):
             # Convolutional layers
             self.cnn_layers = nn.Sequential(
-                nn.Conv2d(self.in_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
+                nn.Conv2d(self.in_channels, self.hidden_channels, **cnn_kwargs),
+                nn.ReLU(),
+                nn.Conv2d(self.hidden_channels, self.hidden_channels,
+                          **cnn_kwargs), nn.ReLU(),
+                nn.Conv2d(self.hidden_channels, self.hidden_channels,
+                          **cnn_kwargs), nn.ReLU(),
+                nn.Conv2d(self.hidden_channels, self.hidden_channels,
+                          **cnn_kwargs), nn.ReLU(),
+                nn.Conv2d(self.hidden_channels, self.hidden_channels,
+                          **cnn_kwargs), nn.ReLU(),
             )
             self.reshape = (self.hidden_channels, 4, 4)
         elif image_size == (1, 64, 64):
             # Convolutional layers
             self.cnn_layers = nn.Sequential(
-                nn.Conv2d(self.in_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
-                nn.Conv2d(self.hidden_channels, self.hidden_channels, **cnn_kwargs), nn.ReLU(),
+                nn.Conv2d(self.in_channels, self.hidden_channels, **cnn_kwargs),
+                nn.ReLU(),
+                nn.Conv2d(self.hidden_channels, self.hidden_channels,
+                          **cnn_kwargs), nn.ReLU(),
+                nn.Conv2d(self.hidden_channels, self.hidden_channels,
+                          **cnn_kwargs), nn.ReLU(),
+                nn.Conv2d(self.hidden_channels, self.hidden_channels,
+                          **cnn_kwargs), nn.ReLU(),
             )
             self.reshape = (self.hidden_channels, 4, 4)
 
@@ -58,10 +69,9 @@ class Encoder(nn.Module):
         # x -> (batch_size, self.reshape)
 
         x = self.final_layers(x)
-        x = x.reshape(-1, 2, self.latent_dim * self.n_features)
+        x = x.reshape(-1, self.latent_dim * self.n_features)
+        return x
 
-        mu, log_var = x.unbind(1)
-        return mu, log_var
 
 
 if __name__ == '__main__':
@@ -69,7 +79,8 @@ if __name__ == '__main__':
     image_size = (3, 128, 128)
     n_features = 6
     latent_dim = 1024
-    encoder = Encoder(image_size=image_size, n_features=n_features, latent_dim=latent_dim)
+    encoder = Encoder(image_size=image_size, n_features=n_features,
+                      latent_dim=latent_dim)
 
     x = torch.randn(2, 3, 128, 128)
     out = encoder(x)
@@ -80,7 +91,8 @@ if __name__ == '__main__':
     image_size = (1, 64, 64)
     n_features = 5
     latent_dim = 1024
-    encoder = Encoder(image_size=image_size, n_features=n_features, latent_dim=latent_dim)
+    encoder = Encoder(image_size=image_size, n_features=n_features,
+                      latent_dim=latent_dim)
 
     x = torch.randn(2, 1, 64, 64)
     out = encoder(x)

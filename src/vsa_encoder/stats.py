@@ -49,7 +49,7 @@ class Stats:
     def make_dataloader(self, batch_size: int = 4):
         return DataLoader(self.dataset, batch_size=batch_size, shuffle=True)
 
-    def restore_from_nth_features(self, n: int = 4, image_idx: int = 0):
+    def restore_from_nth_features(self, n: int = 3, image_idx: int = 0):
         # get random image
         image, labels = self.dataset[image_idx]
         image = torch.from_numpy(image).to(self.device).float()
@@ -57,17 +57,51 @@ class Stats:
         image = torch.unsqueeze(image, 0)
 
         # get all possible combinations of n features
-        used_features_list = list(itertools.combinations(range(self.model.n_features), n))
+        used_features_list = list(itertools.combinations(range(0, self.model.n_features), n))
         for feature_comb in used_features_list:
             z, _, _ = self.model.encode(image)
-            z = z[:, feature_comb, :]
-            z = torch.sum(z, dim=1)
-            decoded_image = self.model.decoder(z)
-            title = 'Image decoded from features:\n' + \
-                    ", ".join([f'{self.dataset.feature_names[feature_index]}' for feature_index in feature_comb])
-            self.visualizer.plot_before_after(image[0], decoded_image[0], 'Image', 'Decoded Image', title)
-
+            if 3 in feature_comb:
+                coord_x = self.model.mlp_x(z[:, 3])
+            else:
+                coord_x = torch.zeros((1, 32))
+            if 4 in feature_comb:
+                coord_y = self.model.mlp_y(z[:, 4])
+            else:
+                coord_y = torch.zeros((1, 32))
             print(feature_comb)
+
+            features_name = ", ".join([f'{self.dataset.feature_names[feature_index]}' for feature_index in feature_comb])
+            title = 'Image decoded from features:\n' + features_name
+
+            feature_comb = (i for i in feature_comb if i not in (3, 4))
+            z_feat = torch.zeros_like(z)
+            for feature_index in feature_comb:
+                z_feat[:, feature_index] = z[:, feature_index, :]
+            z_feat = torch.sum(z_feat, dim=1)
+            z_feat = torch.cat((z_feat, coord_x, coord_y), dim=1)
+            decoded_image = self.model.decoder(z_feat)
+            self.visualizer.plot_before_after(image[0], decoded_image[0], 'Image', 'Decoded Image', title,
+                                              save_file=True, filename='./screenshots/' + features_name)
+
+        # print(feature_comb)
+        # used_features_list = list(itertools.combinations(range(3, self.model.n_features), n))
+        # for feature_comb in used_features_list:
+        #     z, _, _ = self.model.encode(image)
+        #     if 3 in feature_comb:
+        #         coord_x = self.model.mlp_x(z[:, 3])
+        #     else:
+        #         coord_x = torch.zeros((1,32))
+        #     if 4 in feature_comb:
+        #         coord_y = self.model.mlp_y(z[:, 4])
+        #     else:
+        #         coord_y = torch.zeros((1,32))
+        #
+        #     z = torch.cat((torch.zeros((1, 1024)), coord_x, coord_y), dim=1)
+        #     decoded_image = self.model.decoder(z)
+        #     title = 'Image decoded from features:\n' + \
+        #             ", ".join([f'{self.dataset.feature_names[feature_index]}' for feature_index in feature_comb])
+        #     self.visualizer.plot_before_after(image[0], decoded_image[0], 'Image', 'Decoded Image', title)
+        #
 
     def simple_process_image(self,
                              feature_values,
@@ -124,7 +158,7 @@ class Stats:
 
         return image, labels, features, image_latent, decoded_image, out
 
-    def decode_from_codebook(self, feature_values, display: bool=True):
+    def decode_from_codebook(self, feature_values, display: bool = True):
         # feature_names ('shape', 'scale', 'orientation', 'posX', 'posY')
         # features_count [3, 6, 40, 32, 32]
         image_idx: int = self.dataset._get_element_pos(feature_values)
@@ -202,11 +236,52 @@ class Stats:
 
         self.codebook = codebook
 
+    def check_multiple_vsa(self, n_images):
+        accuracy = 0
+        accuracies = [0] * 3
+        for _ in tqdm(range(n_images)):
+            img_idx = random.randrange(0, len(self.dataset))
+            image, labels = self.dataset[img_idx]
+            image = torch.from_numpy(image).to(self.device).float()
+            image = torch.unsqueeze(image, 0)
+            image = torch.unsqueeze(image, 0)
+
+            # labels = labels.to(self.device)
+
+            features = self.model.get_features(image)
+
+            placeholders = self.model.hd_placeholders.data
+
+            out = torch.zeros_like(features)
+            out[:, :3] = bind(features[:, :3], placeholders)
+            out[:, 3:] = features[:, 3:]
+
+            image_latent = torch.sum(out[:, :3], dim=-2)
+
+            hd_placeholders = self.model.hd_placeholders.data.squeeze(0)
+
+            for i, feature_vector in enumerate(features[0][:3]):
+                output_vec = unbind(image_latent[0], feature_vector)
+
+                similarities = []
+                for j, hd_placeholder in enumerate(hd_placeholders):
+                    similarity = sim(output_vec, hd_placeholder)
+                    similarities.append(similarity)
+                    # print(f'Feature unbinded {i} is similar to feature {j} for {similarity}')
+
+                similarities = torch.stack(similarities, dim=0)
+                max_pos = torch.argmax(similarities, dim=0)
+                accuracy += max_pos == i
+                accuracies[i] += max_pos == i
+                # print(f'Feature unbinded {i} is most similar to feature {max_pos}')
+        print(accuracy / n_images / 3)
+        print([i / n_images for i in accuracies])
+
     def check_vsa(self, feature_values: List):
 
         image, labels, features, image_latent, decoded_image, out = self.simple_process_image(feature_values,
-                                                                                         multiply_by_placeholders=True,
-                                                                                         display=True)
+                                                                                              multiply_by_placeholders=True,
+                                                                                              display=True)
 
         hd_placeholders = self.model.hd_placeholders.data.squeeze(0)
 
@@ -239,7 +314,9 @@ class Visualizer:
                           image_after: torch.Tensor,
                           text_before: str,
                           text_after: str,
-                          title: str):
+                          title: str,
+                          save_file: bool = False,
+                          filename: Optional[str] = None):
         fig, ax = plt.subplots(1, 2)
         plt.suptitle(title)
 
@@ -250,6 +327,11 @@ class Visualizer:
             ax[i].set_xlabel(title)
 
         fig.tight_layout()
+        if save_file:
+            if filename is not None:
+                plt.savefig(filename + '.png')
+            else:
+                plt.savefig(title + '.png')
         plt.show()
 
     def show_feature_mean_vectors(self, features: np.ndarray, labels: np.ndarray, feature: int,
@@ -307,7 +389,7 @@ if __name__ == '__main__':
     # feature_names ('shape', 'scale', 'orientation', 'posX', 'posY')
     # features_count [3, 6, 40, 32, 32]
     # stats.simple_process_image([0, 0, 0, 0, 0],
-                               # multiply_by_placeholders=False)
+    # multiply_by_placeholders=False)
     # # top left
     # stats.simple_process_image([0, 0, 0, 0, 0],
     #                            multiply_by_placeholders=True)
@@ -341,11 +423,11 @@ if __name__ == '__main__':
     # -- Restore from nth combination of features
     # --------------------------------------------------
 
-    # image_idx = random.randint(0, len(stats.dataset))
-    # stats.restore_from_nth_features(4, image_idx)
-    # stats.restore_from_nth_features(3, image_idx)
-    # stats.restore_from_nth_features(2, image_idx)
-    # stats.restore_from_nth_features(1, image_idx)
+    image_idx = random.randint(0, len(stats.dataset))
+    stats.restore_from_nth_features(4, image_idx)
+    stats.restore_from_nth_features(3, image_idx)
+    stats.restore_from_nth_features(2, image_idx)
+    stats.restore_from_nth_features(1, image_idx)
 
     # --------------------------------------------------
     # -- Get latents
@@ -359,7 +441,8 @@ if __name__ == '__main__':
     # -- Check vsa
     # --------------------------------------------------
 
-    processed_latents = stats.check_vsa([2, 2, 2, 24, 0])
+    # processed_latents = stats.check_vsa([2, 2, 2, 24, 0])
+    # vsam = stats.check_multiple_vsa(1000)
 
     # --------------------------------------------------
     # -- Codebook of mean vectors
